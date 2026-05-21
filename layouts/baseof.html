@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="{{ .Site.Language.Locale }}">
+{{ partial "head.html" . }}
+{{ partial "nav.html" . }}
+{{ block "header" .}}
+<header class="intro-header" style="background-image: url('{{ .Site.Params.header_image | relURL }}')">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1 ">
+                <div class="site-heading">
+                    <h1>{{ .Site.Title}} </h1>
+                    <span class="subheading">{{ .Site.Params.slogan }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+{{ end }}
+
+{{ block "main" . }}
+{{ end }}
+
+{{ partial "footer.html" . }}
+{{ if .Store.Get "hasMermaid" }}
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"
+          data-cfasync="false" defer></script>
+  <script data-cfasync="false" defer>
+    document.addEventListener('DOMContentLoaded', function () {
+      mermaid.initialize({
+        startOnLoad: true,
+        securityLevel: 'loose',
+        theme: 'base',
+        darkMode: false,
+        themeVariables: {
+          background: '#fffaf4',
+          primaryColor: '#f2e4d7',
+          primaryTextColor: '#1f1f1f',
+          primaryBorderColor: '#8b5e3c',
+          lineColor: '#5c5148',
+          secondaryColor: '#e6ddd2',
+          tertiaryColor: '#f7efe6',
+          mainBkg: '#f2e4d7',
+          secondBkg: '#e6ddd2',
+          tertiaryBkg: '#f7efe6',
+          clusterBkg: '#f3ebe2',
+          clusterBorder: '#8b5e3c',
+          fontFamily: 'Helvetica Neue, Helvetica, Arial, sans-serif',
+          fontSize: '15px',
+          textColor: '#1f1f1f',
+          edgeLabelBackground: '#fffaf4',
+          actorBkg: '#f2e4d7',
+          actorBorder: '#8b5e3c',
+          actorTextColor: '#1f1f1f',
+          actorLineColor: '#5c5148',
+          signalColor: '#5c5148',
+          signalTextColor: '#1f1f1f',
+          labelBoxBkgColor: '#fffaf4',
+          labelBoxBorderColor: '#8b5e3c',
+          labelTextColor: '#1f1f1f',
+          loopTextColor: '#1f1f1f',
+          noteBkgColor: '#fbf3cf',
+          noteBorderColor: '#8b5e3c',
+          noteTextColor: '#1f1f1f',
+          activationBkgColor: '#e8d8cb',
+          activationBorderColor: '#8b5e3c',
+          sequenceNumberColor: '#fffaf4'
+        }
+      });
+    });
+  </script>
+{{ end }}
+</body>
+</html>

@@ -1,0 +1,29 @@
+{{ define "main" }}
+<main>
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-10 col-lg-offset-1 col-md-10 col-md-offset-1 col-sm-12 col-xs-12">
+        <section class="home-panels">
+          <a class="home-panel home-panel-resume" href="{{ "/resume/" | relLangURL }}">
+            <span class="home-panel-label">Marcos Lucas</span>
+            <h2 class="home-panel-title">Resume</h2>
+            <p class="home-panel-copy">Career history, architecture work, leadership scope, and technical depth.</p>
+          </a>
+
+          <a class="home-panel home-panel-blog" href="{{ "/blog/" | relLangURL }}">
+            <span class="home-panel-label">Marcos Lucas</span>
+            <h2 class="home-panel-title">Personal Blog</h2>
+            <p class="home-panel-copy">Notes, essays, and technical writing on systems, delivery, and engineering.</p>
+          </a>
+
+          <a class="home-panel home-panel-architecture" href="{{ "/architecture/" | relLangURL }}">
+            <span class="home-panel-label">Marcos Lucas</span>
+            <h2 class="home-panel-title">Site Architecture</h2>
+            <p class="home-panel-copy">Diagrams and explanations for the Hugo, S3, CloudFront, and GitHub OIDC setup.</p>
+          </a>
+        </section>
+      </div>
+    </div>
+  </div>
+</main>
+{{ end }}

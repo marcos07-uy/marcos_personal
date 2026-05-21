@@ -1,0 +1,17 @@
+/public/
+/resources/
+/.hugo_build.lock
+/.local/
+/.terraform/
+.terraform/
+**/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+!.terraform.tfvars.example
+!**/terraform.tfvars.example
+crash.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json

@@ -1,0 +1,108 @@
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <script>
+    (function() {
+        const autoTheme = {{ if not .Site.Params.auto_theme }}false{{ else }}true{{ end }};
+        if (autoTheme) {
+            document.documentElement.setAttribute('data-auto-theme', 'true');
+        }
+
+        const theme = localStorage.getItem('cleanwhite-theme') ||
+                      (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-theme', theme);
+    })();
+    </script>
+
+    <meta property="og:site_name" content="{{ .Site.Title }}">
+    <meta property="og:type" content="article">
+
+    {{ if .Params.thumbnail }}
+    <meta property="og:image" content="{{ .Site.BaseURL }}{{ .Params.thumbnail }}">
+    <meta property="twitter:image" content="{{ .Site.BaseURL }}{{ .Params.thumbnail }}" />
+    {{ else if .Params.image}}
+    <meta property="og:image" content="{{ .Site.BaseURL }}{{ .Params.image }}">
+    <meta property="twitter:image" content="{{ .Site.BaseURL }}{{ .Params.image }}" />
+    {{ else }}
+    <meta property="og:image" content="{{ .Site.BaseURL }}/{{ .Site.Params.header_image }}">
+    <meta property="twitter:image" content="{{ .Site.BaseURL }}/{{ .Site.Params.header_image }}" />
+    {{ end }}
+
+    {{ if .Params.title }}
+    <meta name="title" content="{{ .Params.title }}" />
+    <meta property="og:title" content="{{ .Params.title }}" />
+    <meta property="twitter:title" content="{{ .Params.title }}" />
+    {{ else }}
+    <meta name="title" content="{{ .Site.Params.title }}" />
+    <meta property="og:title" content="{{ .Site.Params.title }}" />
+    <meta property="twitter:title" content="{{ .Site.Params.title }}" />
+    {{ end }}
+
+    {{ if .Params.description }}
+    <meta name="description" content="{{ .Params.description }}">
+    <meta property="og:description" content="{{ .Params.description }}" />
+    <meta property="twitter:description" content="{{ .Params.description }}" />
+    {{ else }}
+    <meta name="description" content="{{ .Site.Params.description }}">
+    <meta property="og:description" content="{{ .Site.Params.description }}" />
+    <meta property="twitter:description" content="{{ .Site.Params.description }}" />
+    {{ end }}
+
+    <meta property="og:url" content="{{ .Permalink }}" />
+
+    {{ if .Params.summary }}
+    <meta property="twitter:card" content="{{ .Params.summary }}" />
+    {{ else }}
+    <meta property="twitter:card" content="summary" />
+    {{ end }}
+
+    <meta name="keyword"  content="{{ .Site.Params.keyword }}">
+    <link rel="shortcut icon" href="{{ "img/favicon.ico" | relURL }}">
+
+    <title>{{ if .Title }}{{ .Title }} | {{ .Site.Params.SEOTitle }}{{ else }}{{ .Site.Params.SEOTitle }}{{ end }}</title>
+
+    <link rel="canonical" href="{{ .RelPermalink }}">
+
+    {{ if .Site.Params.disqus_proxy }}
+    <link rel="stylesheet" href="{{ "css/iDisqus.min.css" | relURL }}"/>
+    {{ end }}
+
+    <link rel="stylesheet" href="{{ "css/bootstrap.min.css" | relURL }}">
+    <link rel="stylesheet" href="{{ "css/hugo-theme-cleanwhite.css" | relURL }}">
+    <link rel="stylesheet" href="{{ "css/theme-variables.css" | relURL }}">
+    <link rel="stylesheet" href="{{ "css/zanshang.min.css" | relURL }}">
+    <link rel="stylesheet" href="{{ "css/font-awesome.all.min.css" | relURL }}">
+
+    {{ $noop := .WordCount }}
+    {{ if .Page.Store.Get "hasMath" -}}
+        {{ partial "math/katex-css.html" . -}}
+        {{ partial "math/katex-fonts.html" . -}}
+    {{ end -}}
+
+    {{ range .Site.Params.custom_css -}}
+      {{ if or (hasPrefix . "http://") (hasPrefix . "https://") }}
+    <link rel="stylesheet" href="{{ . }}">
+      {{ else }}
+    <link rel="stylesheet" href="{{ . | relURL }}">
+      {{ end }}
+    {{- end }}
+
+    <script src="{{ "js/jquery.min.js" | relURL }}"></script>
+    <script src="{{ "js/bootstrap.min.js" | relURL }}"></script>
+    <script src="{{ "js/hux-blog.min.js" | relURL }}"></script>
+    <script src="{{ "js/lazysizes.min.js" | relURL }}"></script>
+
+    {{ range .Site.Params.custom_js }}
+      {{ if or (hasPrefix . "http://") (hasPrefix . "https://") }}
+    <script src="{{ . }}"></script>
+      {{ else }}
+    <script src="{{ . | relURL }}"></script>
+      {{ end }}
+    {{ end }}
+</head>
+
+{{ if .Site.Config.Services.GoogleAnalytics.ID }}
+{{ template "_internal/google_analytics.html" . }}
+{{ end }}
