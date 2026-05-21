@@ -1,0 +1,15 @@
+aws_region            = "us-east-1"
+project_name          = "marcos-personal"
+github_repository     = "marcos07-uy/marcos_personal"
+github_branch         = "main"
+bucket_name_override  = null
+price_class           = "PriceClass_100"
+force_destroy         = false
+domain_aliases        = []
+acm_certificate_arn   = null
+github_oidc_provider_arn = null
+permissions_boundary_arn = null
+
+tags = {
+  Environment = "prod"
+}
