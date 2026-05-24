@@ -65,6 +65,9 @@ locale = "en-US"
   [[params.additional_menus]]
     title = "Site Architecture"
     href = "/architecture"
+  [[params.additional_menus]]
+    title = "Coeficiente de Extrañitud™"
+    href = "/coeficiente"
 
 [markup]
   [markup.tableOfContents]
