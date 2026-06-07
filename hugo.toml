@@ -66,8 +66,8 @@ locale = "en-US"
     title = "Site Architecture"
     href = "/architecture"
   [[params.additional_menus]]
-    title = "Coeficiente de Extrañitud™"
-    href = "/coeficiente"
+    title = "Huayhuash 2026"
+    href = "/huayhuash"
 
 [markup]
   [markup.tableOfContents]

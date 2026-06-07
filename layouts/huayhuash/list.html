@@ -1,0 +1,206 @@
+{{ define "header" }}
+<header class="intro-header huayhuash-header" style="background-image: linear-gradient(180deg, rgba(4, 28, 53, 0.18), rgba(4, 28, 53, 0.82)), url('{{ "img/huayhuash-2026-cifras.png" | relURL }}')">
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-10 col-lg-offset-1 col-md-10 col-md-offset-1">
+        <div class="site-heading huayhuash-heading">
+          <span class="huayhuash-kicker">Cordillera Huayhuash, Perú</span>
+          <h1>{{ .Title }}</h1>
+          <span class="subheading">La expedición en cifras</span>
+          <p class="huayhuash-header-note">11 días de travesía resumidos a partir del itinerario de la expedición.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+{{ end }}
+
+{{ define "main" }}
+<main class="huayhuash-page">
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-10 col-lg-offset-1 col-md-10 col-md-offset-1 col-sm-12 col-xs-12">
+        <article class="huayhuash-shell">
+          <section class="huayhuash-intro">
+            {{ .Content }}
+          </section>
+
+          <section class="huayhuash-stat-grid" aria-label="Resumen principal de la expedición">
+            <article class="huayhuash-stat-card">
+              <span class="huayhuash-icon">01</span>
+              <strong>230,3 km</strong>
+              <span>Distancia recorrida</span>
+            </article>
+            <article class="huayhuash-stat-card">
+              <span class="huayhuash-icon">02</span>
+              <strong>14.766 m</strong>
+              <span>Ascenso acumulado</span>
+            </article>
+            <article class="huayhuash-stat-card">
+              <span class="huayhuash-icon">03</span>
+              <strong>16.090 m</strong>
+              <span>Descenso acumulado</span>
+            </article>
+            <article class="huayhuash-stat-card">
+              <span class="huayhuash-icon">04</span>
+              <strong>5.020 m</strong>
+                <span>Altura máxima</span>
+            </article>
+          </section>
+
+          <section class="huayhuash-panel">
+            <div class="huayhuash-panel-head">
+              <span class="huayhuash-ribbon">1</span>
+              <div>
+                <p class="huayhuash-eyebrow">La expedición en cifras</p>
+                <h2>Distancia recorrida</h2>
+              </div>
+            </div>
+            <div class="huayhuash-feature">
+              <strong>230,3 km</strong>
+              <ul>
+                <li>5,5 maratones consecutivas</li>
+                <li>576 vueltas a una pista olímpica</li>
+                <li>Aproximadamente 307.000 pasos</li>
+              </ul>
+            </div>
+          </section>
+
+          <section class="huayhuash-panel huayhuash-panel-split">
+            <div>
+              <div class="huayhuash-panel-head">
+                <span class="huayhuash-ribbon">2</span>
+                <div>
+                  <p class="huayhuash-eyebrow">Ascenso acumulado</p>
+                  <h2>14.766 m</h2>
+                </div>
+              </div>
+              <p>Equivale a 45 Torres Eiffel, 17,8 Burj Khalifa y 1,67 veces la altura del Everest.</p>
+            </div>
+            <div>
+              <div class="huayhuash-panel-head">
+                <span class="huayhuash-ribbon">3</span>
+                <div>
+                  <p class="huayhuash-eyebrow">Altura máxima</p>
+                  <h2>5.020 m</h2>
+                </div>
+              </div>
+              <p>Casi 10 veces la altura del Cerro Catedral en Uruguay, 6 veces la altura del Burj Khalifa, con aire de mucha menor presión que al nivel del mar.</p>
+            </div>
+          </section>
+
+          <section class="huayhuash-panel">
+            <div class="huayhuash-panel-head">
+              <span class="huayhuash-ribbon">4</span>
+              <div>
+                <p class="huayhuash-eyebrow">Comparaciones sorprendentes</p>
+                <h2>Cambio vertical total</h2>
+              </div>
+            </div>
+            <div class="huayhuash-comparison-grid">
+              <div>
+                <strong>30.856 m</strong>
+                <span>Ascenso + descenso acumulados</span>
+              </div>
+              <div>
+                <strong>3,5 veces</strong>
+                <span>la altura del Everest</span>
+              </div>
+              <div>
+                <strong>94</strong>
+                <span>Torres Eiffel</span>
+              </div>
+            </div>
+          </section>
+
+          <section class="huayhuash-panel huayhuash-panel-split">
+            <div>
+              <div class="huayhuash-panel-head">
+                <span class="huayhuash-ribbon">5</span>
+                <div>
+                  <p class="huayhuash-eyebrow">Camino hacia el espacio</p>
+                  <h2>14,8%</h2>
+                </div>
+              </div>
+              <p>Del camino hasta la línea de Kármán, ubicada a 100 km y usada como inicio convencional del espacio.</p>
+            </div>
+            <div>
+              <div class="huayhuash-panel-head">
+                <span class="huayhuash-ribbon">6</span>
+                <div>
+                  <p class="huayhuash-eyebrow">Energía en movimiento</p>
+                  <h2>50.000-75.000 kcal</h2>
+                </div>
+              </div>
+              <p>Gasto estimado equivalente a unas 100 a 150 hamburguesas, hasta 140 hamburguesas de 500 kcal.</p>
+            </div>
+          </section>
+
+          <section class="huayhuash-panel">
+            <div class="huayhuash-panel-head">
+              <span class="huayhuash-ribbon">7</span>
+              <div>
+                <p class="huayhuash-eyebrow">Ritmo de expedición</p>
+                <h2>Promedios diarios</h2>
+              </div>
+            </div>
+            <div class="huayhuash-comparison-grid">
+              <div>
+                <strong>10,5 km</strong>
+                <span>por día de distancia</span>
+              </div>
+              <div>
+                <strong>671 m</strong>
+                <span>por día de ascenso</span>
+              </div>
+              <div>
+                <strong>731 m</strong>
+                <span>por día de descenso</span>
+              </div>
+            </div>
+          </section>
+
+          <section class="huayhuash-panel">
+            <div class="huayhuash-panel-head">
+              <span class="huayhuash-ribbon">8</span>
+              <div>
+                <p class="huayhuash-eyebrow">Días destacados</p>
+                <h2>Marcas del itinerario</h2>
+              </div>
+            </div>
+            <div class="huayhuash-comparison-grid">
+              <div>
+                <strong>16,6 km</strong>
+                <span>jornada más larga</span>
+              </div>
+              <div>
+                <strong>1.358 m</strong>
+                <span>mayor ascenso en un día</span>
+              </div>
+              <div>
+                <strong>5.020 m</strong>
+                <span>punto más alto</span>
+              </div>
+            </div>
+          </section>
+
+          <section class="huayhuash-statement">
+            <p><strong>230,3 km</strong> recorridos + <strong>14.766 m</strong> de ascenso + <strong>5.020 m</strong> de altura máxima = una de las travesías de senderismo más espectaculares y exigentes del planeta.</p>
+          </section>
+
+          <section class="huayhuash-infographics" aria-label="Infografías originales de Huayhuash 2026">
+            <figure>
+              <img src="{{ "img/huayhuash-2026-cifras.png" | relURL }}" alt="Infografía Huayhuash 2026 con cifras principales de la expedición">
+              <figcaption>Pág. 1: datos resumidos a partir del itinerario de la expedición.</figcaption>
+            </figure>
+            <figure>
+              <img src="{{ "img/huayhuash-2026-comparaciones.png" | relURL }}" alt="Infografía Huayhuash 2026 con comparaciones sorprendentes de la expedición">
+              <figcaption>Pág. 2: valores de gasto energético y pasos como estimaciones ilustrativas.</figcaption>
+            </figure>
+          </section>
+        </article>
+      </div>
+    </div>
+  </div>
+</main>
+{{ end }}
