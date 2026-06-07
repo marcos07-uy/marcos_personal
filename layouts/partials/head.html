@@ -81,11 +81,12 @@
         {{ partial "math/katex-fonts.html" . -}}
     {{ end -}}
 
+    {{ $assetVersion := now.Unix }}
     {{ range .Site.Params.custom_css -}}
       {{ if or (hasPrefix . "http://") (hasPrefix . "https://") }}
     <link rel="stylesheet" href="{{ . }}">
       {{ else }}
-    <link rel="stylesheet" href="{{ . | relURL }}">
+    <link rel="stylesheet" href="{{ printf "%s?v=%v" (. | relURL) $assetVersion }}">
       {{ end }}
     {{- end }}
 
