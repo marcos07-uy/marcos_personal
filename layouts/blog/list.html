@@ -1,0 +1,97 @@
+{{ define "main" }}
+<!-- Blog List Content -->
+<article>
+    <div class="container">
+        <div class="row">
+            <!-- Post Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                post-container">
+
+                {{ .Content }}
+                <div data-pagefind-ignore="all">
+                {{ range .Paginator.Pages }}
+                <div class="post-preview">
+                    <a href="{{ .RelPermalink }}">
+                        <h2 class="post-title">
+                            {{ .Title }}
+                        </h2>
+                        {{ with .Params.subtitle }}
+                        <h3 class="post-subtitle">
+                            {{ . }}
+                        </h3>
+                        {{ end }}
+                        <div class="post-content-preview">
+                        {{ with .Description }}
+                            {{ . }}
+                        {{ else }}
+                            {{ .Summary | plainify }}
+                        {{ end }}
+                        </div>
+                    </a>
+                    <p class="post-meta">
+                    {{ if .Params.metadata }}
+                        {{ range .Params.metadata }}
+                            {{ if .link }}
+                                <a href="{{ .link }}">{{ .text }}</a>
+                            {{ else }}
+                                {{ .text }}
+                            {{ end }}
+                        {{ end }}
+                    {{ else }}
+                        Posted by {{ with .Params.author }}{{ . }}{{ else }}{{ .Site.Title }}{{ end }} on {{ .Date.Format "Monday, January 2, 2006" }}
+                        {{ if (and (not .Lastmod.IsZero) (not (eq (dateFormat "2006-01-02" .Lastmod) (dateFormat "2006-01-02" .Date)))) }}
+                            <br>Last Modified on {{ dateFormat "Monday, January 2, 2006" .Params.LastMod }}
+                        {{ end }}
+                    {{ end }}
+                    </p>
+                </div>
+                <hr>
+                {{ end }}
+                </div>
+                {{ partial "pagination.html" . }}
+
+            </div>
+            <!-- Sidebar Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                sidebar-container">
+
+                <!-- Featured Tags -->
+                {{ if .Site.Params.featured_tags }}
+                <section>
+                    <hr class="hidden-sm hidden-xs">
+                    <h5><a href="/tags/">FEATURED TAGS</a></h5>
+                    <div class="tags">
+                        {{ $featured_condition_size := .Site.Params.featured_condition_size }}
+                        {{ range $name, $taxonomy := .Site.Taxonomies.tags }}
+                        {{ if gt (len $taxonomy.Pages) $featured_condition_size }}
+                        <a href="{{ "/tags/" | relLangURL }}{{ $name | urlize }}" title="{{ $name }}">
+                        {{ $name }}
+                        </a>
+                        {{ end }}
+                        {{ end }}
+                    </div>
+                </section>
+                {{ end }}
+
+                <!-- Friends Blog -->
+                {{ if .Site.Params.friends }}
+                <section>
+                    <hr>
+                    <h5>FRIENDS</h5>
+                    <ul class="list-inline">
+                        {{ range .Site.Params.friend_link }}
+                        <li><a href="{{ .href }}">{{ .title }}</a></li>
+                        {{ end }}
+                    </ul>
+                </section>
+                {{ end }}
+            </div>
+        </div>
+    </div>
+</article>
+
+{{ end }}
