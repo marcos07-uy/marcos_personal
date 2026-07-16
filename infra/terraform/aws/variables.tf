@@ -40,21 +40,10 @@ variable "force_destroy" {
   default     = false
 }
 
-variable "domain_aliases" {
-  description = "Optional custom domain aliases for CloudFront."
-  type        = list(string)
-  default     = []
-}
-
-variable "acm_certificate_arn" {
-  description = "ACM certificate ARN in us-east-1 for custom domains. Leave null to use the default CloudFront certificate."
+variable "domain_name" {
+  description = "Public domain managed by Route 53 and attached to CloudFront. Set null to use only the default CloudFront domain."
   type        = string
   default     = null
-
-  validation {
-    condition     = length(var.domain_aliases) == 0 || var.acm_certificate_arn != null
-    error_message = "acm_certificate_arn must be set when domain_aliases are provided."
-  }
 }
 
 variable "github_oidc_provider_arn" {

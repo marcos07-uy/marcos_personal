@@ -5,8 +5,7 @@ github_branch         = "main"
 bucket_name_override  = null
 price_class           = "PriceClass_100"
 force_destroy         = false
-domain_aliases        = []
-acm_certificate_arn   = null
+domain_name           = "marcos-lucas.uy"
 github_oidc_provider_arn = null
 permissions_boundary_arn = null
 

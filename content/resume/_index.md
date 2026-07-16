@@ -7,7 +7,7 @@ title = "Resume"
 
 # Marcos Lucas
 
-Senior Principal Cloud Architect | IT and Engineering Leader | GCP and Multi-Cloud
+Head of Software Development Operations | IT and Engineering Leader | Cloud Architecture
 
 Montevideo, Uruguay  
 Open to remote, hybrid, or on-site roles  
@@ -20,17 +20,19 @@ Open to remote, hybrid, or on-site roles
 
 ## Professional Summary
 
-Senior Principal Cloud Architect and engineering leader with 20+ years of experience designing, scaling, and governing enterprise cloud platforms in large, complex organizations.
+Software development operations executive, Senior Principal Cloud Architect, and engineering leader with 20+ years of experience delivering software initiatives and designing, scaling, and governing enterprise cloud platforms in large, complex organizations.
 
-Combines hands-on technical depth with people leadership, including experience leading teams of up to 15 engineers while staying directly involved in architecture, platform design, and delivery.
+Combines hands-on technical depth with people leadership, cross-functional delivery management, and operational oversight while staying directly involved in architecture, platform design, security, and execution.
 
 Deep expertise in Google Cloud Platform, platform engineering, infrastructure as code, and multi-cloud environments. Known for building secure, scalable cloud foundations that improve developer velocity without compromising governance, reliability, or security.
 
-Most recently at Sabre Corporation, contributed to the evolution of a GCP platform supporting 9,300 service projects and 4,000+ engineers, helped standardize infrastructure delivery from weeks to minutes, and played a key role in a large-scale corporate infrastructure carve-out supporting the SHS/Aven separation.
+Currently Head of Software Development Operations at ECOM, leading software delivery and coordinating development, support, and Security Operations Center teams. Previously at Sabre Corporation, contributed to the evolution of a GCP platform supporting 9,300 service projects and 4,000+ engineers, standardized infrastructure delivery from weeks to minutes, and played a key role in the SHS/Aven infrastructure carve-out.
 
 ## Core Skills
 
 - Cloud architecture
+- Software development operations
+- Software delivery and roadmap execution
 - Google Cloud Platform
 - Multi-cloud architecture across GCP and AWS
 - Platform engineering
@@ -42,11 +44,31 @@ Most recently at Sabre Corporation, contributed to the evolution of a GCP platfo
 - SRE practices
 - Cloud network architecture
 - Enterprise security and compliance
+- Security operations and incident management
+- Vendor and strategic partner management
+- KPI-driven process improvement
 - ISO 27001-aligned governance
 - People leadership and technical mentorship
 - Delivery governance
 
 ## Professional Experience
+
+### ECOM
+
+Montevideo, Uruguay
+
+#### Head of Software Development Operations
+
+Jun 2026 – Present
+
+- Lead the planning, execution, and delivery of software development initiatives, aligning technical priorities with business needs, customer expectations, and product roadmap objectives.
+- Coordinate development, support, and Security Operations Center teams, fostering collaboration, continuous improvement, engineering best practices, and operational quality.
+- Oversee SOC operations, supporting incident management, operational follow-up, and continuous improvement of monitoring and response processes.
+- Manage relationships with technology vendors and strategic partners supporting the evolution of products, platforms, and security services.
+- Optimize development, support, and operations processes to improve efficiency, predictability, traceability, and delivery quality.
+- Monitor key performance indicators and drive improvement actions across processes, teams, deliverables, and operations.
+- Evaluate emerging technologies and modern engineering practices to strengthen security, scalability, and competitive advantage.
+- Ensure delivered solutions follow cloud security best practices and applicable standards.
 
 ### Sabre Corporation
 
@@ -55,7 +77,7 @@ Total tenure: approximately 19 years
 
 #### Senior Principal Cloud Architect
 
-Nov 2021 – Present
+Nov 2021 – Jun 2026
 
 - Architected and evolved the enterprise GCP landing zone and Shared VPC strategy supporting 9,300 service projects across development, certification, production, and SSVS environments.
 - Designed and delivered reusable Terraform modules that reduced infrastructure provisioning from weeks to minutes, enabling self-service and standardized provisioning for 4,000+ engineers.

@@ -11,6 +11,46 @@ locals {
   )
   github_oidc_provider_arn = var.github_oidc_provider_arn != null ? var.github_oidc_provider_arn : aws_iam_openid_connect_provider.github[0].arn
   origin_id                = "site-s3-origin"
+  domain_aliases           = var.domain_name == null ? [] : [var.domain_name, "www.${var.domain_name}"]
+}
+
+resource "aws_route53_zone" "site" {
+  count = var.domain_name == null ? 0 : 1
+  name  = var.domain_name
+}
+
+resource "aws_acm_certificate" "site" {
+  count                     = var.domain_name == null ? 0 : 1
+  domain_name               = var.domain_name
+  subject_alternative_names = ["www.${var.domain_name}"]
+  validation_method         = "DNS"
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+resource "aws_route53_record" "certificate_validation" {
+  for_each = var.domain_name == null ? {} : {
+    for option in aws_acm_certificate.site[0].domain_validation_options : option.domain_name => {
+      name   = option.resource_record_name
+      record = option.resource_record_value
+      type   = option.resource_record_type
+    }
+  }
+
+  zone_id         = aws_route53_zone.site[0].zone_id
+  name            = each.value.name
+  type            = each.value.type
+  records         = [each.value.record]
+  ttl             = 300
+  allow_overwrite = true
+}
+
+resource "aws_acm_certificate_validation" "site" {
+  count                   = var.domain_name == null ? 0 : 1
+  certificate_arn         = aws_acm_certificate.site[0].arn
+  validation_record_fqdns = [for record in aws_route53_record.certificate_validation : record.fqdn]
 }
 
 resource "aws_s3_bucket" "site" {
@@ -74,7 +114,7 @@ resource "aws_cloudfront_distribution" "site" {
   is_ipv6_enabled     = true
   comment             = "${var.project_name} static site"
   default_root_object = "index.html"
-  aliases             = var.domain_aliases
+  aliases             = local.domain_aliases
   price_class         = var.price_class
 
   origin {
@@ -119,10 +159,36 @@ resource "aws_cloudfront_distribution" "site" {
   }
 
   viewer_certificate {
-    acm_certificate_arn            = var.acm_certificate_arn
-    cloudfront_default_certificate = var.acm_certificate_arn == null
-    minimum_protocol_version       = var.acm_certificate_arn == null ? "TLSv1" : "TLSv1.2_2021"
-    ssl_support_method             = var.acm_certificate_arn == null ? null : "sni-only"
+    acm_certificate_arn            = var.domain_name == null ? null : aws_acm_certificate_validation.site[0].certificate_arn
+    cloudfront_default_certificate = var.domain_name == null
+    minimum_protocol_version       = var.domain_name == null ? "TLSv1" : "TLSv1.2_2021"
+    ssl_support_method             = var.domain_name == null ? null : "sni-only"
+  }
+}
+
+resource "aws_route53_record" "site_ipv4" {
+  for_each = toset(local.domain_aliases)
+  zone_id  = aws_route53_zone.site[0].zone_id
+  name     = each.value
+  type     = "A"
+
+  alias {
+    name                   = aws_cloudfront_distribution.site.domain_name
+    zone_id                = aws_cloudfront_distribution.site.hosted_zone_id
+    evaluate_target_health = false
+  }
+}
+
+resource "aws_route53_record" "site_ipv6" {
+  for_each = toset(local.domain_aliases)
+  zone_id  = aws_route53_zone.site[0].zone_id
+  name     = each.value
+  type     = "AAAA"
+
+  alias {
+    name                   = aws_cloudfront_distribution.site.domain_name
+    zone_id                = aws_cloudfront_distribution.site.hosted_zone_id
+    evaluate_target_health = false
   }
 }
 

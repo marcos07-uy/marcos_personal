@@ -49,6 +49,9 @@ It provisions:
 
 - a private S3 bucket for site artifacts
 - CloudFront with Origin Access Control
+- a Route 53 public hosted zone for the custom domain
+- an ACM TLS certificate validated automatically through Route 53
+- IPv4 and IPv6 alias records for the apex domain and `www`
 - a CloudFront Function to support Hugo clean URLs
 - an IAM OIDC provider for GitHub Actions, unless you point Terraform at an existing one
 - a least-privilege IAM role restricted to this repository and branch
@@ -79,6 +82,7 @@ After `apply`, note these outputs:
 - `cloudfront_distribution_id`
 - `cloudfront_domain_name`
 - `github_actions_role_arn`
+- `route53_name_servers`
 
 ## GitHub Actions Setup
 
@@ -98,9 +102,35 @@ The workflow in [.github/workflows/deploy.yml](/home/marcos/repos/marcos_persona
 
 ## Custom Domain
 
-The Terraform stack supports custom aliases if you provide:
+Set `domain_name = "marcos-lucas.uy"` in `terraform.tfvars`. The stack creates the
+Route 53 hosted zone, DNS-validated ACM certificate, CloudFront aliases, and A/AAAA
+alias records for both `marcos-lucas.uy` and `www.marcos-lucas.uy`.
 
-- `domain_aliases`
-- `acm_certificate_arn`
+Because CloudFront requires its certificate in `us-east-1`, keep `aws_region` set
+to `us-east-1` for this stack.
 
-The ACM certificate for CloudFront must exist in `us-east-1`.
+Create the hosted zone first:
+
+```bash
+terraform apply -target=aws_route53_zone.site
+terraform output route53_name_servers
+```
+
+At the registrar where `marcos-lucas.uy` was purchased, replace its current
+authoritative name servers with all four values from that output. Wait until
+the delegation is visible publicly, for example with:
+
+```bash
+dig NS marcos-lucas.uy +short
+```
+
+Then create the certificate, CloudFront aliases, and DNS records:
+
+```bash
+terraform apply
+```
+
+Do not create A, AAAA, CNAME, or ACM validation records at the registrar: after
+delegation, Route 53 manages those records. DNS delegation can take time to
+propagate. Keep the hosted zone: deleting and recreating it assigns different
+name servers and breaks the delegation until the registrar is updated again.
