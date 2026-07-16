@@ -1,4 +1,4 @@
-baseURL = "https://example.com/"
+baseURL = "https://marcos-lucas.uy/"
 title = "Marcos Lucas"
 theme = "hugo-theme-cleanwhite"
 locale = "en-US"
@@ -28,7 +28,7 @@ locale = "en-US"
   page_view_counter = false
   algolia_search = false
 
-  sidebar_about_description = "Senior Principal Cloud Architect, engineering leader, father, and CrossFitter."
+  sidebar_about_description = "Head of Software Development Operations, cloud architect, engineering leader, father, and CrossFitter."
   sidebar_avatar = "img/marcos-profile-placeholder.svg"
 
   featured_tags = false

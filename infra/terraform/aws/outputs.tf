@@ -17,3 +17,18 @@ output "github_actions_role_arn" {
   value       = aws_iam_role.github_actions_deploy.arn
   description = "IAM role assumed by GitHub Actions through OIDC."
 }
+
+output "site_domain_name" {
+  value       = var.domain_name
+  description = "Custom domain attached to CloudFront."
+}
+
+output "route53_name_servers" {
+  value       = var.domain_name == null ? [] : aws_route53_zone.site[0].name_servers
+  description = "Authoritative name servers to configure at the domain registrar."
+}
+
+output "acm_certificate_arn" {
+  value       = var.domain_name == null ? null : aws_acm_certificate.site[0].arn
+  description = "ACM certificate used by CloudFront."
+}
