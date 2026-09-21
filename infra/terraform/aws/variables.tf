@@ -63,3 +63,19 @@ variable "tags" {
   type        = map(string)
   default     = {}
 }
+
+variable "sudoku_access_code" {
+  description = "Private shared access code for Claudia's Sudoku."
+  type        = string
+  sensitive   = true
+}
+variable "sudoku_session_secret" {
+  description = "Long random secret used to sign Sudoku sessions."
+  type        = string
+  sensitive   = true
+}
+variable "sudoku_timezone" {
+  description = "IANA timezone used for authoritative unlock dates."
+  type        = string
+  default     = "America/Montevideo"
+}

@@ -6,6 +6,8 @@
 /.terraform/
 .terraform/
 **/.terraform/
+**/.build/
+static/sudoku/dev-catalog.js
 *.tfstate
 *.tfstate.*
 *.tfvars

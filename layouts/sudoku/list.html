@@ -1,0 +1,7 @@
+{{ define "header" }}{{ end }}
+{{ define "main" }}
+<main id="sudoku-app" class="sudoku-app" aria-live="polite">
+  <noscript><p>Para jugar necesitás habilitar JavaScript.</p></noscript>
+</main>
+<script type="module" src="{{ printf "%s?v=%d" ("sudoku/app.js" | relURL) now.Unix }}"></script>
+{{ end }}

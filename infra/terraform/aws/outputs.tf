@@ -32,3 +32,6 @@ output "acm_certificate_arn" {
   value       = var.domain_name == null ? null : aws_acm_certificate.site[0].arn
   description = "ACM certificate used by CloudFront."
 }
+
+output "sudoku_progress_table_name" { value = aws_dynamodb_table.sudoku_progress.name }
+output "sudoku_rewards_bucket_name" { value = aws_s3_bucket.sudoku_rewards.id }
