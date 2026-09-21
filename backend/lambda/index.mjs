@@ -15,10 +15,21 @@ const ACCESS_CODE = process.env.ACCESS_CODE;
 const SESSION_SECRET = process.env.SESSION_SECRET;
 const TZ = process.env.UNLOCK_TIMEZONE || 'America/Montevideo';
 const board = (text) => Array.from({ length: 9 }, (_, r) => [...text.slice(r * 9, r * 9 + 9)].map(Number));
-const peers = (r, c) => [...new Set(Array.from({ length: 9 }, (_, i) => [`${r}:${i}`, `${i}:${c}`]).flat().concat(Array.from({ length: 9 }, (_, i) => `${Math.floor(r / 3) * 3 + Math.floor(i / 3)}:${Math.floor(c / 3) * 3 + i % 3}`)))].filter((key) => key !== `${r}:${c}`).map((x) => x.split(':').map(Number));
-const candidates = (grid, r, c) => grid[r][c] ? [] : [1,2,3,4,5,6,7,8,9].filter((n) => !peers(r,c).some(([a,b]) => grid[a][b] === n));
-function solutions(grid, limit = 2) { const work = grid.map((r) => [...r]); const out = []; const visit = () => { if (out.length >= limit) return; let best; for (let r=0;r<9;r++) for(let c=0;c<9;c++) if(!work[r][c]) { const values=candidates(work,r,c); if(!values.length)return; if(!best || values.length<best.values.length)best={r,c,values}; } if(!best){out.push(work.map(r=>[...r]));return;} for(const value of best.values){work[best.r][best.c]=value;visit();work[best.r][best.c]=0;} }; visit(); return out; }
-const puzzles = rawPuzzles.map(([id, difficulty, unlockLocal, initial, assistancePolicy], index) => { const initialBoard = board(initial); const solved = solutions(initialBoard); if (solved.length !== 1) throw new Error(`Puzzle ${id} is not uniquely solvable`); return { id, type: 'classic-9x9', difficulty, difficultyScore: index + 1, unlockLocal, unlockAt: zonedTimeToEpoch(unlockLocal, TZ), initialBoard, solution: solved[0], assistancePolicy, rewardId: `reward-${id}` }; });
+// These solutions remain inside Lambda. Their uniqueness is verified in the automated test suite,
+// rather than recalculated during every cold start.
+const solutionStrings = {
+  '01': '534678912672195348198342567859761423426853791713924856961537284287419635345286179',
+  '02': '435269781682571493197834562826195347374682915951743628519326874248957136763418259',
+  '03': '397681524645279813218534976823956741169742358754318692472893165531467289986125437',
+  '04': '462831957795426183381795426173984265659312748248567319926178534834259671517643892',
+  '05': '534678912672195348198342567859761423426853791713924856961537284287419635345286179',
+  '06': '245981376169273584837564219976125438513498627482736951391657842728349165654812793',
+  '07': '534678912672195348198342567859761423426853791713924856961537284287419635345286179',
+  '08': '987654321246173985351928746128537694634892157795461832519286473472319568863745219',
+  '09': '162857493534129678789643521475312986913586742628794135356478219241935867897261354',
+  '10': '693784512487512936125963874932651487568247391741398625319475268856129743274836159'
+};
+const puzzles = rawPuzzles.map(([id, difficulty, unlockLocal, initial, assistancePolicy], index) => ({ id, type: 'classic-9x9', difficulty, difficultyScore: index + 1, unlockLocal, unlockAt: zonedTimeToEpoch(unlockLocal, TZ), initialBoard: board(initial), solution: board(solutionStrings[id]), assistancePolicy, rewardId: `reward-${id}` }));
 const rewards = Object.fromEntries(puzzles.map((p) => [p.rewardId, { id: p.rewardId, type: 'message', title: `Un detalle para el Sudoku ${p.id}`, body: 'Tu recompensa personal estará lista aquí. ❤️', assetKey: null }]));
 const now = () => Date.now(); const safe = (p) => (({ solution, ...rest }) => rest)(p);
 const json = (statusCode, body) => ({ statusCode, headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store', 'access-control-allow-origin': process.env.ALLOWED_ORIGIN || '*', 'access-control-allow-headers': 'content-type,authorization', 'access-control-allow-methods': 'GET,POST,OPTIONS' }, body: JSON.stringify(body) });
