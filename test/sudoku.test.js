@@ -59,3 +59,10 @@ test('rejects malformed or oversized client game state before persistence', () =
   assert.equal(isValidGameState({ ...valid, hintsUsed: 3 }, '01', policy), false);
   assert.equal(isValidGameState({ ...valid, notes: { '9:0': [1] } }, '01', policy), false);
 });
+test('offline support caches only the Sudoku shell and never API responses', async () => {
+  const serviceWorker = await import('node:fs/promises').then((fs) => fs.readFile(new URL('../static/sudoku/sw.js', import.meta.url), 'utf8'));
+  const app = await import('node:fs/promises').then((fs) => fs.readFile(new URL('../static/sudoku/app.js', import.meta.url), 'utf8'));
+  assert.match(serviceWorker, /url\.pathname\.startsWith\('\/api\/'\)/);
+  assert.match(app, /Sin conexión\. Podés seguir jugando sin cerrar esta pestaña/);
+  assert.match(app, /navigator\.serviceWorker\.register\('\/sudoku\/sw\.js'/);
+});

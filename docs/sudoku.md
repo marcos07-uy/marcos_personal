@@ -6,6 +6,12 @@
 
 El estado se guarda inmediatamente en `localStorage` y se sincroniza de forma diferida con DynamoDB. Cada registro usa `userId` + `puzzleId`, una revisión monotónica y marca temporal. Una escritura con una revisión antigua devuelve `409`; el cliente nunca sobrescribe silenciosamente una versión más nueva. DynamoDB tiene recuperación puntual activada. La validación de finalización vuelve a comparar el tablero completo con la solución dentro de Lambda y es idempotente.
 
+## Uso sin conexión
+
+Tras abrir Sudoku con internet, un service worker guarda la pantalla y los módulos del juego. El cliente también conserva el último catálogo autorizado, cada tablero ya abierto y el progreso local. Si se pierde la conexión durante una partida aparece un aviso visible: **“Podés seguir jugando sin cerrar esta pestaña”**. Las jugadas se guardan inmediatamente en el teléfono y se sincronizan automáticamente al recuperar conexión. Si el tablero quedó completo sin red, se vuelve a enviar para validación y recompensa al reconectar.
+
+No se cachean rutas `/api`, soluciones ni recompensas privadas. La primera apertura y el primer inicio de sesión requieren conexión. Para máxima confiabilidad durante el vuelo, Claudia debe abrir la página y el Sudoku que va a jugar antes de salir; mantener la pestaña abierta evita depender de que iOS o Android descarte la pestaña por falta de memoria.
+
 La hora para desbloquear se evalúa exclusivamente en Lambda. Las seis fechas son explícitas: 30 de septiembre; 2, 5, 7 y 10 de octubre; y el desafío final el 16 de octubre. Se interpretan como medianoche en `America/Montevideo` por defecto (configurable con `sudoku_timezone`) y no dependen de completar un desafío anterior.
 
 ## Acceso y recompensas
