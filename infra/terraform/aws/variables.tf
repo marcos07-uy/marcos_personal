@@ -69,6 +69,12 @@ variable "sudoku_access_code" {
   type        = string
   sensitive   = true
 }
+variable "sudoku_developer_access_code" {
+  description = "Optional private code that unlocks all Sudoku puzzles for the developer, using a separate progress profile."
+  type        = string
+  sensitive   = true
+  default     = null
+}
 variable "sudoku_session_secret" {
   description = "Long random secret used to sign Sudoku sessions."
   type        = string

@@ -49,6 +49,76 @@ export function solve(board, limit = 2) {
   visit(); return solutions;
 }
 
+const allUnits = () => {
+  const units = [];
+  for (let index = 0; index < SIZE; index += 1) {
+    units.push({ type: 'row', index, cells: digits.map((_, column) => [index, column]) });
+    units.push({ type: 'column', index, cells: digits.map((_, row) => [row, index]) });
+  }
+  for (let row = 0; row < SIZE; row += 3) for (let column = 0; column < SIZE; column += 3) units.push({ type: 'box', index: boxOf(row, column), cells: Array.from({ length: 9 }, (_, index) => [row + Math.floor(index / 3), column + index % 3]) });
+  return units;
+};
+const cellKey = (row, column) => `${row}:${column}`;
+const cellsForKey = (key) => key.split(':').map(Number);
+
+/**
+ * Applies a deliberately limited, human-style technique set. It does not guess.
+ * A stalled result means the puzzle needs a technique outside this set, not that it
+ * has no logical solution.
+ */
+export function analyzeDifficulty(board) {
+  const working = cloneBoard(board);
+  const candidates = new Map();
+  const units = allUnits();
+  const techniques = { nakedSingles: 0, hiddenSingles: 0, lockedCandidates: 0, nakedPairs: 0 };
+  for (let row = 0; row < SIZE; row += 1) for (let column = 0; column < SIZE; column += 1) if (!working[row][column]) candidates.set(cellKey(row, column), new Set(candidatesFor(working, row, column)));
+  const remove = (key, value) => { const values = candidates.get(key); if (!values?.has(value)) return false; values.delete(value); return true; };
+  const place = (row, column, value, technique) => {
+    const key = cellKey(row, column); if (!candidates.has(key)) return false;
+    working[row][column] = value; candidates.delete(key); techniques[technique] += 1;
+    peersOf(row, column).forEach(([peerRow, peerColumn]) => remove(cellKey(peerRow, peerColumn), value));
+    return true;
+  };
+  const invalid = () => [...candidates.values()].some((values) => values.size === 0);
+  const nakedSingle = () => {
+    for (const [key, values] of candidates) if (values.size === 1) { const [row, column] = cellsForKey(key); return place(row, column, [...values][0], 'nakedSingles'); }
+    return false;
+  };
+  const hiddenSingle = () => {
+    for (const unit of units) for (const value of digits) {
+      const matches = unit.cells.filter(([row, column]) => candidates.get(cellKey(row, column))?.has(value));
+      if (matches.length === 1) return place(matches[0][0], matches[0][1], value, 'hiddenSingles');
+    }
+    return false;
+  };
+  const lockedCandidate = () => {
+    for (const box of units.filter((unit) => unit.type === 'box')) for (const value of digits) {
+      const matches = box.cells.filter(([row, column]) => candidates.get(cellKey(row, column))?.has(value));
+      if (matches.length < 2) continue;
+      const rows = new Set(matches.map(([row]) => row)); const columns = new Set(matches.map(([, column]) => column));
+      if (rows.size === 1) { const row = [...rows][0]; const changed = digits.some((_, column) => !box.cells.some(([boxRow, boxColumn]) => boxRow === row && boxColumn === column) && remove(cellKey(row, column), value)); if (changed) { techniques.lockedCandidates += 1; return true; } }
+      if (columns.size === 1) { const column = [...columns][0]; const changed = digits.some((_, row) => !box.cells.some(([boxRow, boxColumn]) => boxRow === row && boxColumn === column) && remove(cellKey(row, column), value)); if (changed) { techniques.lockedCandidates += 1; return true; } }
+    }
+    return false;
+  };
+  const nakedPair = () => {
+    for (const unit of units) {
+      const pairs = new Map();
+      unit.cells.forEach(([row, column]) => { const values = candidates.get(cellKey(row, column)); if (values?.size === 2) { const signature = [...values].sort().join(','); pairs.set(signature, [...(pairs.get(signature) || []), cellKey(row, column)]); } });
+      for (const [signature, pair] of pairs) if (pair.length === 2) { const values = signature.split(',').map(Number); let changed = false; unit.cells.forEach(([row, column]) => { const key = cellKey(row, column); if (!pair.includes(key)) values.forEach((value) => { changed ||= remove(key, value); }); }); if (changed) { techniques.nakedPairs += 1; return true; } }
+    }
+    return false;
+  };
+  let iterations = 0;
+  while (!invalid() && candidates.size && iterations < 1000) { iterations += 1; if (nakedSingle() || hiddenSingle() || lockedCandidate() || nakedPair()) continue; break; }
+  const solvedLogically = candidates.size === 0 && isCompleteAndValid(working);
+  const remainingCells = candidates.size;
+  const weightedScore = techniques.nakedSingles + techniques.hiddenSingles * 2 + techniques.lockedCandidates * 8 + techniques.nakedPairs * 12;
+  const advancedRequired = !solvedLogically && !invalid();
+  const label = advancedRequired ? 'Experto' : weightedScore > 78 ? 'Difícil' : weightedScore > 60 ? 'Medio' : weightedScore > 51 ? 'Fácil / Medio' : 'Fácil';
+  return { solvedLogically, advancedRequired, remainingCells, iterations, techniques, weightedScore, label };
+}
+
 export function nextLogicalStep(board) {
   const possibilities = [];
   for (let r = 0; r < SIZE; r += 1) for (let c = 0; c < SIZE; c += 1) if (!board[r][c]) { const values = candidatesFor(board, r, c); if (values.length === 1) return { technique: 'single-visible', row: r, column: c, value: values[0], unit: 'cell' }; possibilities.push({ r, c, values }); }

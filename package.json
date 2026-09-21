@@ -2,5 +2,5 @@
   "name": "marcos-personal",
   "private": true,
   "type": "module",
-  "scripts": { "generate:sudoku-dev": "node scripts/generate-sudoku-dev-catalog.mjs", "test": "node --test test/*.test.js", "test:sudoku": "node --test test/sudoku.test.js" }
+  "scripts": { "generate:sudoku-dev": "node scripts/generate-sudoku-dev-catalog.mjs", "analyze:sudoku": "node scripts/analyze-sudoku-difficulty.mjs", "test": "node --test test/*.test.js", "test:sudoku": "node --test test/sudoku.test.js" }
 }

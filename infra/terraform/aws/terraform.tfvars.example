@@ -9,6 +9,7 @@ domain_name           = "marcos-lucas.uy"
 github_oidc_provider_arn = null
 permissions_boundary_arn = null
 sudoku_access_code = "replace-with-a-long-private-code"
+sudoku_developer_access_code = "replace-with-a-different-private-developer-code"
 sudoku_session_secret = "replace-with-a-long-random-secret"
 
 tags = {
