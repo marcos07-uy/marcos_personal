@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { analyzeDifficulty, candidatesFor, conflicts, hintFor, isCompleteAndValid, removePeerCandidate, solve } from '../static/sudoku/sudoku-core.js';
 import { zonedTimeToEpoch } from '../backend/lambda/timezone.mjs';
 import { isValidGameState } from '../backend/lambda/validation.mjs';
+import { rewardConfig, validateRewardConfig } from '../backend/lambda/reward-config.mjs';
 
 const toBoard = (text) => Array.from({ length: 9 }, (_, row) => [...text.slice(row * 9, row * 9 + 9)].map(Number));
 const production = [
@@ -65,4 +66,26 @@ test('offline support caches only the Sudoku shell and never API responses', asy
   assert.match(serviceWorker, /url\.pathname\.startsWith\('\/api\/'\)/);
   assert.match(app, /Sin conexión\. Podés seguir jugando sin cerrar esta pestaña/);
   assert.match(app, /navigator\.serviceWorker\.register\('\/sudoku\/sw\.js'/);
+});
+test('reward configuration maps every puzzle once and validates all supported placeholders', () => {
+  assert.deepEqual(validateRewardConfig(rewardConfig), []);
+  assert.deepEqual(rewardConfig.rewards.map((reward) => reward.puzzleId), ['01', '02', '03', '04', '05', '06']);
+  assert.deepEqual(rewardConfig.rewards.map((reward) => reward.type), ['PHOTO', 'SONG', 'VIDEO', 'CHOICE', 'VOUCHER', 'FINAL']);
+  assert.equal(rewardConfig.pieces.enabled, true);
+});
+test('reward validation rejects unsafe mappings, broken choices and invalid final blocks', () => {
+  const broken = structuredClone(rewardConfig); broken.rewards[0].puzzleId = '99'; broken.rewards[3].options = [{ id: 'same' }, { id: 'same' }]; broken.rewards[5].blocks = [];
+  const errors = validateRewardConfig(broken);
+  assert.ok(errors.some((error) => /valid puzzle/.test(error)));
+  assert.ok(errors.some((error) => /at least two/.test(error)));
+  assert.ok(errors.some((error) => /at least one block/.test(error)));
+});
+test('reward API keeps private access server-authorized and preview fixtures contain placeholders only', async () => {
+  const lambda = await import('node:fs/promises').then((fs) => fs.readFile(new URL('../backend/lambda/index.mjs', import.meta.url), 'utf8'));
+  const preview = await import('node:fs/promises').then((fs) => fs.readFile(new URL('../static/sudoku/dev-rewards.js', import.meta.url), 'utf8'));
+  assert.match(lambda, /Completá el Sudoku correspondiente para abrir esta recompensa/);
+  assert.match(lambda, /HeadObjectCommand/);
+  assert.match(lambda, /getSignedUrl/);
+  assert.ok(!preview.includes('rewards/reward-'));
+  assert.match(preview, /TODO_REWARD_01_TITLE/);
 });

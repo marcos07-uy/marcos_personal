@@ -1,5 +1,7 @@
 # Sudoku para Claudia
 
+La configuración y carga de recompensas se documenta en [rewards.md](rewards.md).
+
 ## Arquitectura
 
 `/sudoku/` es una página Hugo con JavaScript nativo, sin framework ni dependencia de ejecución. CloudFront enruta `/api/*` a API Gateway HTTP, que invoca una Lambda Node.js. La Lambda conserva las definiciones de los tableros y sus soluciones en el paquete privado de Lambda; los archivos estáticos sólo reciben el tablero inicial, la política de asistencia y el estado permitido.
