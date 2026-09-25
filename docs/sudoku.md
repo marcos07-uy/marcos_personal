@@ -26,7 +26,7 @@ La pantalla inicial solicita un código compartido. Lambda verifica ese código,
 
 El reset deja el desafío exactamente como nuevo: sin porcentaje, sin marca de “en progreso” y sin recompensa desbloqueada. Lambda conserva una marca técnica temporal para que un teléfono con una copia local antigua no pueda restaurar el progreso eliminado; cuando Claudia vuelva a abrir el Sudoku, recibe el tablero inicial vacío.
 
-Cada desbloqueo programado envía un email a `sudoku_notification_email` mediante Amazon SES. El panel admin permite enviar una prueba para cada Sudoku. Terraform crea la identidad SES y AWS enviará un mensaje de verificación a esa casilla antes del primer envío; mientras la cuenta SES permanezca en sandbox, el destinatario también debe estar verificado. La configuración actual usa `marcos.s.lucas@gmail.com` como remitente y destinatario de prueba.
+Cada desbloqueo programado envía un email con Resend. El panel admin permite enviar una prueba para cada Sudoku. Definí una `resend_api_key` con permiso de envío, limitada a `marcos-lucas.uy`, y mantenela sólo en `terraform.tfvars`. La configuración actual usa `Sudoku para Claudia <sudoku@marcos-lucas.uy>` como remitente y `marcos.s.lucas@gmail.com` como destinatario de prueba.
 
 Cada Sudoku tiene un **Muro de mensajes** accesible antes de empezar o continuar el tablero. Claudia y Marcos pueden publicar mensajes de hasta 800 caracteres; Lambda guarda el autor derivado de la sesión y el momento de publicación. Los mensajes se almacenan en la misma tabla DynamoDB, en una partición compartida independiente de los progresos, y sólo se consultan o escriben mediante una sesión válida.
 

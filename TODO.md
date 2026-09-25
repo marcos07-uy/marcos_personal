@@ -19,4 +19,4 @@
   Cuando tengas ganas, tu próximo desafío ya está listo.
   ```
 
-- Una vez que Resend esté funcionando, retirar las reglas, permisos e identidad de SES que se agregaron para estas notificaciones.
+- Tras confirmar el primer email de prueba con Resend, retirar cualquier configuración SES residual que siga en AWS.

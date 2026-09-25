@@ -1,7 +1,3 @@
-resource "aws_sesv2_email_identity" "sudoku_notifications" {
-  email_identity = var.sudoku_notification_email
-}
-
 locals {
   sudoku_unlock_notifications = {
     "01" = "cron(0 3 30 9 ? 2026)"
