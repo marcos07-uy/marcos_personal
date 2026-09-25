@@ -75,6 +75,11 @@ variable "sudoku_developer_access_code" {
   sensitive   = true
   default     = null
 }
+variable "sudoku_admin_access_code" {
+  description = "Private administrator password for reviewing Claudia's progress, resets, and shared messages."
+  type        = string
+  sensitive   = true
+}
 variable "sudoku_session_secret" {
   description = "Long random secret used to sign Sudoku sessions."
   type        = string

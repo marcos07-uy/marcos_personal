@@ -89,3 +89,16 @@ test('reward API keeps private access server-authorized and preview fixtures con
   assert.ok(!preview.includes('rewards/reward-'));
   assert.match(preview, /TODO_REWARD_01_TITLE/);
 });
+test('administrator controls and the shared wall remain server-authorized', async () => {
+  const lambda = await import('node:fs/promises').then((fs) => fs.readFile(new URL('../backend/lambda/index.mjs', import.meta.url), 'utf8'));
+  const terraform = await import('node:fs/promises').then((fs) => fs.readFile(new URL('../infra/terraform/aws/sudoku.tf', import.meta.url), 'utf8'));
+  const app = await import('node:fs/promises').then((fs) => fs.readFile(new URL('../static/sudoku/app.js', import.meta.url), 'utf8'));
+  assert.match(lambda, /ADMIN_ACCESS_CODE/);
+  assert.match(lambda, /path === '\/admin\/status'/);
+  assert.match(lambda, /DeleteCommand/);
+  assert.match(lambda, /const wall = path\.match/);
+  assert.match(terraform, /dynamodb:Query/);
+  assert.match(terraform, /sudoku_admin_access_code/);
+  assert.match(app, /Muro de mensajes/);
+  assert.match(app, /Progreso de Claudia/);
+});

@@ -22,6 +22,10 @@ La pantalla inicial solicita un código compartido. Lambda verifica ese código,
 
 `sudoku_developer_access_code` es un segundo código opcional, exclusivo de desarrollo. Su sesión usa un usuario DynamoDB separado (`marcos-development`) y desbloquea los seis desafíos sin cambiar el calendario ni el progreso de Claudia. Configuralo únicamente en `terraform.tfvars`; no lo compartas. La interfaz muestra una banda visible **Modo de prueba** cuando se usa.
 
+`sudoku_admin_access_code` es una contraseña separada para Marcos. Al ingresar con ella, la página muestra el panel privado de administración: porcentaje, tiempo, pistas, última actualización y finalización de cada Sudoku de Claudia. Desde ese panel se puede resetear un desafío; la acción borra el progreso guardado de Claudia y el estado de su recompensa para ese desafío, pero no borra el muro de mensajes. Es una operación deliberada con confirmación en la interfaz.
+
+Cada Sudoku tiene un **Muro de mensajes** accesible antes de empezar o continuar el tablero. Claudia y Marcos pueden publicar mensajes de hasta 800 caracteres; Lambda guarda el autor derivado de la sesión y el momento de publicación. Los mensajes se almacenan en la misma tabla DynamoDB, en una partición compartida independiente de los progresos, y sólo se consultan o escriben mediante una sesión válida.
+
 Las recompensas se almacenan en el bucket privado `*-sudoku-rewards`, separado del bucket Hugo y sin acceso público. Para una recompensa con archivo, asigná `assetKey` en el mapa `rewards` de `backend/lambda/index.mjs`, subí el archivo con esa clave al bucket y desplegá Terraform/Lambda. Sólo tras una finalización validada la API emite una URL S3 firmada por cinco minutos. Nunca pongas fotos o videos privados bajo `static/`.
 
 ## Puzles y asistencia
@@ -56,7 +60,7 @@ Seguí esta secuencia. No ejecuta cambios en AWS hasta el paso 3.
 
    Abrí `http://localhost:1313/sudoku/?sudokuDev=unlock-all`. Desde un teléfono en la misma Wi-Fi usá la IP privada de la laptop con el mismo parámetro. Probá notas, deshacer/rehacer, cerrar/reabrir, reinicio local y finalización.
 
-2. Confirmá que `infra/terraform/aws/terraform.tfvars` existe sólo en tu máquina e incluye valores privados para `sudoku_access_code`, `sudoku_developer_access_code` y `sudoku_session_secret`. No lo agregues a Git.
+2. Confirmá que `infra/terraform/aws/terraform.tfvars` existe sólo en tu máquina e incluye valores privados para `sudoku_access_code`, `sudoku_developer_access_code`, `sudoku_admin_access_code` y `sudoku_session_secret`. No lo agregues a Git.
 
 3. Revisá y, si el plan es el esperado, aplicá la infraestructura:
 
