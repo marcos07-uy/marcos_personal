@@ -3,6 +3,7 @@ import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, DeleteCommand, GetCommand, PutCommand, QueryCommand } from '@aws-sdk/lib-dynamodb';
 import { S3Client, GetObjectCommand, HeadObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { SESv2Client, SendEmailCommand } from '@aws-sdk/client-sesv2';
 import { zonedTimeToEpoch } from './timezone.mjs';
 import { isBoard, isValidGameState, parseBody } from './validation.mjs';
 import { rawPuzzles } from './puzzle-data.mjs';
@@ -10,11 +11,13 @@ import { rewardById, rewardByPuzzleId, rewardConfig, validateRewardConfig } from
 
 const db = DynamoDBDocumentClient.from(new DynamoDBClient({}));
 const s3 = new S3Client({});
+const ses = new SESv2Client({});
 const TABLE = process.env.PROGRESS_TABLE;
 const REWARDS_BUCKET = process.env.REWARDS_BUCKET;
 const ACCESS_CODE = process.env.ACCESS_CODE;
 const DEVELOPER_ACCESS_CODE = process.env.DEVELOPER_ACCESS_CODE;
 const ADMIN_ACCESS_CODE = process.env.ADMIN_ACCESS_CODE;
+const NOTIFICATION_EMAIL = process.env.NOTIFICATION_EMAIL;
 const SESSION_SECRET = process.env.SESSION_SECRET;
 const TZ = process.env.UNLOCK_TIMEZONE || 'America/Montevideo';
 const board = (text) => Array.from({ length: 9 }, (_, r) => [...text.slice(r * 9, r * 9 + 9)].map(Number));
@@ -37,6 +40,14 @@ function sign(payload) { const raw = Buffer.from(JSON.stringify(payload)).toStri
 function user(event) { const token = event.headers?.authorization?.replace(/^Bearer\s+/i, ''); if (!token) return null; const [raw, mac] = token.split('.'); const expected = crypto.createHmac('sha256', SESSION_SECRET).update(raw).digest('base64url'); if (!mac || mac.length !== expected.length || !crypto.timingSafeEqual(Buffer.from(mac), Buffer.from(expected))) return null; try { const claim = JSON.parse(Buffer.from(raw, 'base64url')); return claim.exp > Math.floor(now()/1000) ? { id: claim.sub, developerMode: claim.developerMode === true, admin: claim.admin === true } : null; } catch { return null; } }
 function available(puzzle, developerMode = false) { return developerMode || now() >= puzzle.unlockAt; }
 async function progress(userId, puzzleId) { return (await db.send(new GetCommand({ TableName: TABLE, Key: { userId, puzzleId } }))).Item; }
+const resetRecordId = (puzzleId) => `RESET#${puzzleId}`;
+async function resetState(userId, puzzleId) { return progress(userId, resetRecordId(puzzleId)); }
+async function sendUnlockEmail(puzzle, test = false) {
+  if (!NOTIFICATION_EMAIL) throw new Error('No hay una casilla configurada para notificaciones.');
+  const subject = test ? `[Prueba] Sudoku ${puzzle.id} desbloqueado` : `Sudoku ${puzzle.id} desbloqueado`;
+  const message = test ? `Esta es una prueba. El Sudoku ${puzzle.id} (${puzzle.difficulty}) está listo para jugar.` : `El Sudoku ${puzzle.id} (${puzzle.difficulty}) ya está desbloqueado. Podés abrirlo en https://marcos-lucas.uy/sudoku/.`;
+  await ses.send(new SendEmailCommand({ FromEmailAddress: NOTIFICATION_EMAIL, Destination: { ToAddresses: [NOTIFICATION_EMAIL] }, Content: { Simple: { Subject: { Data: subject, Charset: 'UTF-8' }, Body: { Text: { Data: message, Charset: 'UTF-8' } } } } }));
+}
 const WALL_USER = 'shared-wall';
 const wallPrefix = (puzzleId) => `WALL#${puzzleId}#`;
 async function wallMessages(puzzleId) {
@@ -80,6 +91,8 @@ async function rewardSlots(userId) { const completions = await completionStatus(
 async function metaReward(userId) { const completions = await completionStatus(userId); const pieces = puzzles.filter((puzzle) => completions[puzzle.id]?.completedAt).length; const enabled = rewardConfig.pieces?.enabled === true; if (!enabled) return { enabled: false, pieces: 0, totalPieces: puzzles.length, unlocked: false }; if (pieces !== puzzles.length) return { enabled: true, pieces, totalPieces: puzzles.length, unlocked: false }; const final = rewardConfig.pieces.finalReward; return { enabled: true, pieces, totalPieces: puzzles.length, unlocked: true, reward: { id: final.id, type: final.type, title: final.title, message: final.message, blocks: await Promise.all(final.blocks.map(publicBlock)) } };
 }
 export async function handler(event) {
+  const scheduledNotification = event.detail?.type === 'sudoku-unlock-notification' ? event.detail : event.type === 'sudoku-unlock-notification' ? event : null;
+  if (scheduledNotification) { const puzzle = puzzles.find((item) => item.id === scheduledNotification.puzzleId); if (!puzzle) throw new Error('Sudoku inexistente para notificación.'); await sendUnlockEmail(puzzle); return { ok: true }; }
   if (event.requestContext?.http?.method === 'OPTIONS') return json(204, {});
   const path = event.rawPath.replace(/^\/api\/sudoku/, '') || '/'; const method = event.requestContext?.http?.method;
   if (path === '/session' && method === 'POST') { const input = parseBody(event.body); if (!input || typeof input.accessCode !== 'string' || input.accessCode.length > 256) return json(400, { error: 'Solicitud inválida.' }); const supplied = input.accessCode; const matches = (code) => code && supplied.length === code.length && crypto.timingSafeEqual(Buffer.from(supplied), Buffer.from(code)); const admin = matches(ADMIN_ACCESS_CODE); const developerMode = !admin && matches(DEVELOPER_ACCESS_CODE); if (!admin && !developerMode && !matches(ACCESS_CODE)) return json(401, { error: 'Código de acceso incorrecto.' }); const sub = admin ? 'marcos-admin' : developerMode ? 'marcos-development' : 'claudia'; return json(200, { token: sign({ sub, admin, developerMode, exp: Math.floor(now()/1000) + 60 * 60 * 24 * 14 }), admin, developerMode }); }
@@ -89,11 +102,13 @@ export async function handler(event) {
     const entries = await Promise.all(puzzles.map(async (puzzle) => { const saved = await progress('claudia', puzzle.id); return { id: puzzle.id, difficulty: puzzle.difficulty, unlockAt: puzzle.unlockAt, progress: saved ? { percent: saved.percent || 0, completedAt: saved.completedAt || null, updatedAt: saved.updatedAt || null, elapsedMs: saved.state?.elapsedMs || 0, hintsUsed: saved.state?.hintsUsed || 0 } : null }; }));
     return json(200, { timezone: TZ, puzzles: entries });
   }
+  const adminEmail = path.match(/^\/admin\/notifications\/(\d{2})\/send$/);
+  if (adminEmail && method === 'POST') { if (!session.admin) return json(403, { error: 'Esta sección es sólo para administración.' }); const target = puzzles.find((item) => item.id === adminEmail[1]); if (!target) return json(404, { error: 'Sudoku inexistente.' }); try { await sendUnlockEmail(target, true); return json(200, { sent: target.id }); } catch (error) { console.error('Notification email failed', { name: error?.name, message: error?.message }); return json(502, { error: 'No pudimos enviar el email. Verificá la identidad de SES.' }); } }
   const adminReset = path.match(/^\/admin\/puzzles\/(\d{2})\/reset$/);
   if (adminReset && method === 'POST') {
     if (!session.admin) return json(403, { error: 'Esta sección es sólo para administración.' }); const target = puzzles.find((item) => item.id === adminReset[1]); if (!target) return json(404, { error: 'Sudoku inexistente.' });
-    const current = await progress('claudia', target.id); const resetAt = now(); const emptyState = { schemaVersion: 1, puzzleId: target.id, board: target.initialBoard, notes: {}, elapsedMs: 0, hintsUsed: 0, autoCandidateFills: 0, completedAt: null, history: [], historyIndex: -1, updatedAt: resetAt, revision: (current?.revision || 0) + 1, resetAt };
-    await Promise.all([db.send(new PutCommand({ TableName: TABLE, Item: { userId: 'claudia', puzzleId: target.id, state: emptyState, percent: Math.round(target.initialBoard.flat().filter(Boolean).length / 81 * 100), completedAt: null, updatedAt: resetAt, resetAt, revision: emptyState.revision } })), db.send(new DeleteCommand({ TableName: TABLE, Key: { userId: 'claudia', puzzleId: rewardRecordId(target.rewardId) } }))]);
+    const current = await progress('claudia', target.id); const resetAt = now();
+    await Promise.all([db.send(new DeleteCommand({ TableName: TABLE, Key: { userId: 'claudia', puzzleId: target.id } })), db.send(new PutCommand({ TableName: TABLE, Item: { userId: 'claudia', puzzleId: resetRecordId(target.id), resetAt, revision: (current?.revision || 0) + 1 } })), db.send(new DeleteCommand({ TableName: TABLE, Key: { userId: 'claudia', puzzleId: rewardRecordId(target.rewardId) } }))]);
     return json(200, { reset: target.id });
   }
   const wall = path.match(/^\/puzzles\/(\d{2})\/messages$/);
@@ -124,7 +139,7 @@ export async function handler(event) {
   const id = path.match(/^\/puzzles\/(\d{2})(?:\/(progress|hint|complete|reward))?$/); if (!id) return json(404, { error: 'No encontrado.' }); const puzzle = puzzles.find((item) => item.id === id[1]); if (!puzzle) return json(404, { error: 'Sudoku inexistente.' }); if (!available(puzzle, session.developerMode)) return json(423, { error: `Este Sudoku se desbloquea el ${new Intl.DateTimeFormat('es-UY', { dateStyle: 'long', timeZone: TZ }).format(new Date(puzzle.unlockAt))}.` });
   const action = id[2];
   if (!action && method === 'GET') return json(200, safe(puzzle));
-  if (action === 'progress') { if (method === 'GET') return json(200, { progress: await progress(userId, puzzle.id) || null }); if (method === 'POST') { const data = parseBody(event.body); if (!data || !Number.isInteger(data.baseRevision) || data.baseRevision < 0 || !isValidGameState(data.state, puzzle.id, puzzle.assistancePolicy)) return json(400, { error: 'Progreso inválido.' }); const current = await progress(userId, puzzle.id); if (current && data.baseRevision !== current.revision) return json(409, { error: 'Existe una versión más reciente.', progress: current }); const record = { userId, puzzleId: puzzle.id, state: data.state, percent: Math.round(data.state.board.flat().filter(Boolean).length / 81 * 100), completedAt: current?.completedAt || null, updatedAt: now(), revision: (current?.revision || 0) + 1 }; await db.send(new PutCommand({ TableName: TABLE, Item: record })); return json(200, { revision: record.revision, updatedAt: record.updatedAt }); } }
+  if (action === 'progress') { if (method === 'GET') { const reset = await resetState(userId, puzzle.id); return json(200, { progress: await progress(userId, puzzle.id) || null, resetAt: reset?.resetAt || null }); } if (method === 'POST') { const data = parseBody(event.body); if (!data || !Number.isInteger(data.baseRevision) || data.baseRevision < 0 || !isValidGameState(data.state, puzzle.id, puzzle.assistancePolicy)) return json(400, { error: 'Progreso inválido.' }); const reset = await resetState(userId, puzzle.id); if (reset && data.state.resetAt !== reset.resetAt) return json(409, { error: 'Este Sudoku fue reiniciado desde administración.', resetAt: reset.resetAt }); const current = await progress(userId, puzzle.id); if (current && data.baseRevision !== current.revision) return json(409, { error: 'Existe una versión más reciente.', progress: current }); const record = { userId, puzzleId: puzzle.id, state: data.state, percent: Math.round(data.state.board.flat().filter(Boolean).length / 81 * 100), completedAt: current?.completedAt || null, updatedAt: now(), revision: (current?.revision || reset?.revision || 0) + 1 }; await db.send(new PutCommand({ TableName: TABLE, Item: record })); if (reset) await db.send(new DeleteCommand({ TableName: TABLE, Key: { userId, puzzleId: resetRecordId(puzzle.id) } })); return json(200, { revision: record.revision, updatedAt: record.updatedAt }); } }
   if (action === 'hint' && method === 'POST') { const data = parseBody(event.body); if (!puzzle.assistancePolicy.allowReveal || !data || !Number.isInteger(data.baseRevision) || !isValidGameState(data.state, puzzle.id, puzzle.assistancePolicy)) return json(400, { error: 'Esta pista no está disponible.' }); const current = await progress(userId, puzzle.id); if (current && data.baseRevision !== current.revision) return json(409, { error: 'Existe una versión más reciente.', progress: current }); const used = data.state.hintsUsed; if (puzzle.assistancePolicy.maxHints !== null && used >= puzzle.assistancePolicy.maxHints) return json(429, { error: 'Ya usaste todas las pistas de este Sudoku.' }); let target = null; for (let row = 0; row < 9 && !target; row += 1) for (let column = 0; column < 9; column += 1) if (!data.state.board[row][column]) { target = { row, column, value: puzzle.solution[row][column] }; break; } if (!target) return json(400, { error: 'No hay celdas vacías para ayudar.' }); const nextState = { ...data.state, hintsUsed: used + 1 }; const record = { userId, puzzleId: puzzle.id, state: nextState, percent: Math.round(data.state.board.flat().filter(Boolean).length / 81 * 100), completedAt: current?.completedAt || null, updatedAt: now(), revision: (current?.revision || 0) + 1 }; await db.send(new PutCommand({ TableName: TABLE, Item: record })); return json(200, { ...target, hintsUsed: nextState.hintsUsed, revision: record.revision, updatedAt: record.updatedAt }); }
   if (action === 'complete' && method === 'POST') { const data = parseBody(event.body); if (!data || !isBoard(data.board) || JSON.stringify(data.board) !== JSON.stringify(puzzle.solution)) return json(400, { error: 'El tablero no es una solución correcta.' }); const current = await progress(userId, puzzle.id); const completedAt = current?.completedAt || now(); const record = { userId, puzzleId: puzzle.id, state: { ...(current?.state || {}), board: data.board, completedAt }, percent: 100, completedAt, updatedAt: now(), revision: (current?.revision || 0) + 1 }; await db.send(new PutCommand({ TableName: TABLE, Item: record })); return json(200, { completedAt, revision: record.revision, rewardId: puzzle.rewardId }); }
   if (action === 'reward' && method === 'GET') { const saved = await progress(userId, puzzle.id); if (!saved?.completedAt) return json(403, { error: 'Completá este Sudoku para abrir su recompensa.' }); const reward = rewardByPuzzleId(puzzle.id); return json(200, { reward: await publicReward(reward, await rewardState(userId, reward.id)) }); }

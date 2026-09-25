@@ -80,6 +80,11 @@ variable "sudoku_admin_access_code" {
   type        = string
   sensitive   = true
 }
+variable "sudoku_notification_email" {
+  description = "Verified SES address that receives Sudoku unlock notifications and is used as the sender during testing."
+  type        = string
+  default     = "marcos.s.lucas@gmail.com"
+}
 variable "sudoku_session_secret" {
   description = "Long random secret used to sign Sudoku sessions."
   type        = string
