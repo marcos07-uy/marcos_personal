@@ -81,9 +81,19 @@ variable "sudoku_admin_access_code" {
   sensitive   = true
 }
 variable "sudoku_notification_email" {
-  description = "Verified SES address that receives Sudoku unlock notifications and is used as the sender during testing."
+  description = "Address that receives Sudoku unlock notifications during testing."
   type        = string
   default     = "marcos.s.lucas@gmail.com"
+}
+variable "resend_api_key" {
+  description = "Resend sending API key restricted to marcos-lucas.uy."
+  type        = string
+  sensitive   = true
+}
+variable "resend_from_email" {
+  description = "Verified Resend sender for Sudoku notifications."
+  type        = string
+  default     = "Sudoku para Claudia <sudoku@marcos-lucas.uy>"
 }
 variable "sudoku_session_secret" {
   description = "Long random secret used to sign Sudoku sessions."

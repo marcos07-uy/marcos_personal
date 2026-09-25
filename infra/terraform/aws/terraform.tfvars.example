@@ -12,6 +12,8 @@ sudoku_access_code = "replace-with-a-long-private-code"
 sudoku_developer_access_code = "replace-with-a-different-private-developer-code"
 sudoku_admin_access_code = "replace-with-a-strong-administrator-password"
 sudoku_notification_email = "marcos.s.lucas@gmail.com"
+resend_api_key = "re_replace-with-a-domain-scoped-sending-key"
+resend_from_email = "Sudoku para Claudia <sudoku@marcos-lucas.uy>"
 sudoku_session_secret = "replace-with-a-long-random-secret"
 
 tags = {

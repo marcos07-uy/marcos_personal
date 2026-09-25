@@ -94,7 +94,7 @@ test('administrator controls and the shared wall remain server-authorized', asyn
   const terraform = await import('node:fs/promises').then((fs) => fs.readFile(new URL('../infra/terraform/aws/sudoku.tf', import.meta.url), 'utf8'));
   const app = await import('node:fs/promises').then((fs) => fs.readFile(new URL('../static/sudoku/app.js', import.meta.url), 'utf8'));
   assert.match(lambda, /ADMIN_ACCESS_CODE/);
-  assert.match(lambda, /SESv2Client/);
+  assert.match(lambda, /api\.resend\.com\/emails/);
   assert.match(lambda, /sudoku-unlock-notification/);
   assert.match(lambda, /resetRecordId/);
   assert.match(lambda, /path === '\/admin\/status'/);
@@ -102,7 +102,7 @@ test('administrator controls and the shared wall remain server-authorized', asyn
   assert.match(lambda, /const wall = path\.match/);
   assert.match(terraform, /dynamodb:Query/);
   assert.match(terraform, /sudoku_admin_access_code/);
-  assert.match(terraform, /ses:SendEmail/);
+  assert.match(terraform, /RESEND_API_KEY/);
   assert.match(app, /Muro de mensajes/);
   assert.match(app, /Un espacio compartido durante este desafío/);
   assert.match(app, /embedded-wall/);
