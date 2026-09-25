@@ -100,5 +100,7 @@ test('administrator controls and the shared wall remain server-authorized', asyn
   assert.match(terraform, /dynamodb:Query/);
   assert.match(terraform, /sudoku_admin_access_code/);
   assert.match(app, /Muro de mensajes/);
+  assert.match(app, /Un espacio compartido durante este desafío/);
+  assert.match(app, /embedded-wall/);
   assert.match(app, /Progreso de Claudia/);
 });
