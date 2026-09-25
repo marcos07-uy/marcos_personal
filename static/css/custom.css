@@ -309,6 +309,13 @@
 .sudoku-cell:nth-child(3n):nth-child(n+19):nth-child(-n+27),.sudoku-cell:nth-child(3n):nth-child(n+46):nth-child(-n+54) { box-shadow:inset -3px -3px 0 #0c211a, inset 0 0 0 1px #638071 !important; }
 @media (max-width: 380px) { .sudoku-app { padding-left:10px;padding-right:10px; }.sudoku-actions { gap:4px; }.sudoku-actions button { font-size:10px; }.sudoku-pad { gap:3px; } }
 
+/* Shared message wall and the password-protected progress panel. */
+.sudoku-auth-note { margin:12px 0 0; color:#d9e4da !important; font-size:12px; }
+.admin-list { display:grid; gap:10px; margin:22px 0; }
+.admin-card { display:grid; grid-template-columns:44px 1fr; gap:12px; padding:13px; border:1px solid #dfcdb6; border-radius:13px; background:#fbf2e6; color:#182c24; box-shadow:0 7px 18px rgba(4,23,17,.2); }
+.admin-card strong,.admin-card small { display:block; }.admin-card small { margin-top:4px; color:#4b5e53; font-size:12px; }.admin-card-actions { display:flex; gap:14px; grid-column:2; }.admin-card-actions button { min-height:30px; padding:0; font-size:13px; }.admin-card-actions button:disabled { opacity:.45; text-decoration:none; cursor:not-allowed; }
+.wall-screen label { display:block; margin:22px 0 7px; color:#fff7eb; font-weight:700; }.wall-screen textarea { display:block; width:100%; min-height:100px; padding:12px; border:2px solid #cfb99c; border-radius:10px; resize:vertical; background:#fff9f0; color:#1b2a23; font:inherit; }.wall-messages { display:grid; gap:10px; margin-top:24px; }.wall-message { padding:14px; border:1px solid rgba(255,239,214,.23); border-radius:13px; background:rgba(14,42,34,.62); }.wall-message strong { color:#f3ca88; }.wall-message time { display:block; margin-top:3px; color:#bdd0c1; font-size:11px; }.wall-message p { margin:9px 0 0; white-space:normal; }.wall-empty { padding:18px; border:1px dashed #e5bd7e; border-radius:12px; text-align:center; }
+
 .huayhuash-kicker {
   display: inline-block;
   margin-bottom: 14px;
