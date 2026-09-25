@@ -57,7 +57,8 @@ resource "aws_iam_role_policy" "sudoku_lambda" {
   policy = jsonencode({ Version = "2012-10-17", Statement = [
     { Effect = "Allow", Action = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"], Resource = "arn:aws:logs:*:*:*" },
     { Effect = "Allow", Action = ["dynamodb:DeleteItem", "dynamodb:GetItem", "dynamodb:PutItem", "dynamodb:Query"], Resource = aws_dynamodb_table.sudoku_progress.arn },
-    { Effect = "Allow", Action = ["s3:GetObject"], Resource = "${aws_s3_bucket.sudoku_rewards.arn}/*" }
+    { Effect = "Allow", Action = ["s3:GetObject"], Resource = "${aws_s3_bucket.sudoku_rewards.arn}/*" },
+    { Effect = "Allow", Action = ["ses:SendEmail"], Resource = "*" }
   ] })
 }
 resource "aws_lambda_function" "sudoku" {
@@ -69,7 +70,7 @@ resource "aws_lambda_function" "sudoku" {
   memory_size      = 256
   filename         = data.archive_file.sudoku_lambda.output_path
   source_code_hash = data.archive_file.sudoku_lambda.output_base64sha256
-  environment { variables = { PROGRESS_TABLE = aws_dynamodb_table.sudoku_progress.name, REWARDS_BUCKET = aws_s3_bucket.sudoku_rewards.bucket, ACCESS_CODE = var.sudoku_access_code, DEVELOPER_ACCESS_CODE = coalesce(var.sudoku_developer_access_code, ""), ADMIN_ACCESS_CODE = var.sudoku_admin_access_code, SESSION_SECRET = var.sudoku_session_secret, UNLOCK_TIMEZONE = var.sudoku_timezone, ALLOWED_ORIGIN = var.domain_name == null ? "*" : "https://${var.domain_name}" } }
+  environment { variables = { PROGRESS_TABLE = aws_dynamodb_table.sudoku_progress.name, REWARDS_BUCKET = aws_s3_bucket.sudoku_rewards.bucket, ACCESS_CODE = var.sudoku_access_code, DEVELOPER_ACCESS_CODE = coalesce(var.sudoku_developer_access_code, ""), ADMIN_ACCESS_CODE = var.sudoku_admin_access_code, NOTIFICATION_EMAIL = var.sudoku_notification_email, SESSION_SECRET = var.sudoku_session_secret, UNLOCK_TIMEZONE = var.sudoku_timezone, ALLOWED_ORIGIN = var.domain_name == null ? "*" : "https://${var.domain_name}" } }
 }
 resource "aws_apigatewayv2_api" "sudoku" {
   name          = "${var.project_name}-sudoku"
