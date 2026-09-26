@@ -70,8 +70,15 @@ test('offline support caches only the Sudoku shell and never API responses', asy
 test('reward configuration maps every puzzle once and validates all supported placeholders', () => {
   assert.deepEqual(validateRewardConfig(rewardConfig), []);
   assert.deepEqual(rewardConfig.rewards.map((reward) => reward.puzzleId), ['01', '02', '03', '04', '05', '06']);
-  assert.deepEqual(rewardConfig.rewards.map((reward) => reward.type), ['PHOTO', 'SONG', 'VIDEO', 'CHOICE', 'VOUCHER', 'FINAL']);
+  assert.deepEqual(rewardConfig.rewards.map((reward) => reward.type), ['PHOTO', 'STORY', 'VIDEO', 'CHOICE', 'VOUCHER', 'FINAL']);
   assert.equal(rewardConfig.pieces.enabled, true);
+});
+test('Reward #2 is the nine-scene private story associated with Sudoku #2', () => {
+  const story = rewardConfig.rewards.find((reward) => reward.id === 'reward-02');
+  assert.equal(story.puzzleId, '02'); assert.equal(story.title, 'Nuestra historia hasta ahora'); assert.equal(story.scenes.length, 9);
+  assert.deepEqual(story.scenes.filter((scene) => scene.asset).map((scene) => scene.asset.key), ['rewards/reward-02/19enero.jpg', 'rewards/reward-02/8mayo.jpg', 'rewards/reward-02/20septiembre.jpg']);
+  assert.equal(story.scenes.at(-1).final, 'Te amo. Más.');
+  assert.ok(!JSON.stringify(story).includes('/tmp/'));
 });
 test('reward validation rejects unsafe mappings, broken choices and invalid final blocks', () => {
   const broken = structuredClone(rewardConfig); broken.rewards[0].puzzleId = '99'; broken.rewards[3].options = [{ id: 'same' }, { id: 'same' }]; broken.rewards[5].blocks = [];
@@ -80,14 +87,21 @@ test('reward validation rejects unsafe mappings, broken choices and invalid fina
   assert.ok(errors.some((error) => /at least two/.test(error)));
   assert.ok(errors.some((error) => /at least one block/.test(error)));
 });
-test('reward API keeps private access server-authorized and preview fixtures contain placeholders only', async () => {
+test('reward API keeps private access server-authorized and supports an authenticated developer preview only', async () => {
   const lambda = await import('node:fs/promises').then((fs) => fs.readFile(new URL('../backend/lambda/index.mjs', import.meta.url), 'utf8'));
   const preview = await import('node:fs/promises').then((fs) => fs.readFile(new URL('../static/sudoku/dev-rewards.js', import.meta.url), 'utf8'));
   assert.match(lambda, /Completá el Sudoku correspondiente para abrir esta recompensa/);
   assert.match(lambda, /HeadObjectCommand/);
   assert.match(lambda, /getSignedUrl/);
+  assert.match(lambda, /session\.developerMode && reward\.id === 'reward-02'/);
   assert.ok(!preview.includes('rewards/reward-'));
   assert.match(preview, /TODO_REWARD_01_TITLE/);
+});
+test('story renderer supports all scenes, controls, missing private media and reduced motion', async () => {
+  const renderer = await import('../static/sudoku/rewards.js'); const app = await import('node:fs/promises').then((fs) => fs.readFile(new URL('../static/sudoku/app.js', import.meta.url), 'utf8')); const css = await import('node:fs/promises').then((fs) => fs.readFile(new URL('../static/css/custom.css', import.meta.url), 'utf8'));
+  const story = rewardConfig.rewards.find((reward) => reward.id === 'reward-02');
+  story.scenes.forEach((scene, index) => { const markup = renderer.storySceneMarkup(story, { ...scene, hasMedia: Boolean(scene.asset), media: scene.asset ? { available: false } : undefined, asset: undefined }, index); assert.match(markup, /reward-story/); if (scene.asset) assert.match(markup, /Contenido pendiente/); });
+  assert.match(app, /storyProgressKey/); assert.match(app, /id="previous"/); assert.match(app, /Volver a mis recompensas/); assert.match(css, /prefers-reduced-motion: reduce/); assert.match(css, /env\(safe-area-inset-bottom\)/);
 });
 test('administrator controls and the shared wall remain server-authorized', async () => {
   const lambda = await import('node:fs/promises').then((fs) => fs.readFile(new URL('../backend/lambda/index.mjs', import.meta.url), 'utf8'));

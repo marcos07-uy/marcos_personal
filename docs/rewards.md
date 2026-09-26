@@ -18,6 +18,7 @@ Editá `backend/lambda/reward-config.mjs`. Buscá `TODO_REWARD` para encontrar t
 - `VOUCHER`: `validFrom`, `expiresAt` opcional y `conditions` opcionales.
 - `CHOICE`: `options`, `permanent` y `showAllChoices`.
 - `FINAL`: `blocks`, que pueden ser texto, foto, audio, video, canción o vale.
+- `STORY`: una secuencia de escenas privadas. Cada escena puede incluir texto, mensajes, momentos y una foto privada; el navegador sólo recibe la URL firmada de cada foto cuando la recompensa está autorizada.
 
 Ejemplo ficticio de cada tipo:
 
@@ -40,6 +41,9 @@ Usá claves predecibles bajo el bucket privado, por ejemplo:
 ```text
 rewards/reward-01/photo.jpg
 rewards/reward-02/audio.m4a
+rewards/reward-02/19enero.jpg
+rewards/reward-02/8mayo.jpg
+rewards/reward-02/20septiembre.jpg
 rewards/reward-03/video.mp4
 rewards/reward-03/poster.jpg
 rewards/reward-06/final-photo.jpg
@@ -68,7 +72,7 @@ Para ver los siete renderizadores de placeholder sin resolver Sudokus, sólo en 
 /sudoku/?sudokuDev=reward-preview
 ```
 
-El fixture `static/sudoku/dev-rewards.js` sólo contiene `TODO_REWARD` y nunca usa la API ni claves privadas. No existe un bypass de recompensas en producción: el código de desarrollo de producción únicamente desbloquea fechas de Sudoku; aún exige completarlos para recompensas.
+El fixture local `static/sudoku/dev-rewards.js` sólo contiene `TODO_REWARD` y nunca usa la API ni claves privadas. Para revisar una recompensa real con media privada, entrá al sitio desplegado usando el código de desarrollador y abrí `/sudoku/?sudokuDev=reward-preview`: sólo esa sesión autenticada puede previsualizar Reward #2 sin completarla. Las sesiones normales siguen exigiendo la finalización de su Sudoku correspondiente.
 
 Después de editar la configuración y/o subir media, aplicá Lambda y publicá el frontend:
 

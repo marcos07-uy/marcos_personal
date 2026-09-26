@@ -11,6 +11,16 @@ const media = (asset, type, extra = '') => {
 const voucher = (reward) => `<section class="reward-voucher"><p>VALE OFICIAL</p><h2>${esc(reward.title)}</h2><p>${esc(reward.message)}</p><dl><dt>Válido desde</dt><dd>${esc(date(reward.validFrom))}</dd><dt>Vencimiento</dt><dd>${esc(date(reward.expiresAt))}</dd>${reward.conditions ? `<dt>Condiciones</dt><dd>${esc(reward.conditions)}</dd>` : ''}</dl></section>`;
 const song = (item) => `<div class="reward-song"><p>${esc(item.song?.title || 'Canción pendiente')}${item.song?.artist ? ` · ${esc(item.song.artist)}` : ''}</p>${item.song?.url ? `<a class="sudoku-primary reward-link" href="${esc(item.song.url)}" target="_blank" rel="noopener noreferrer">Abrir canción</a>` : missing()}</div>`;
 const choice = (reward) => `<section class="reward-choice"><p>${reward.choice?.selectedOptionId ? 'Tu elección' : 'Elegí sabiamente…'}</p>${(reward.choice?.options || []).map((option) => `<button class="reward-choice-option ${option.id === reward.choice.selectedOptionId ? 'selected' : ''}" data-choice="${esc(option.id)}" ${reward.choice?.selectedOptionId && reward.choice?.permanent ? 'disabled' : ''}><strong>${esc(option.label)}</strong><small>${esc(option.description || '')}</small></button>`).join('')}</section>`;
+const paragraphs = (items = '', className = '') => (Array.isArray(items) ? items : [items]).filter(Boolean).map((item) => `<p class="${className}">${esc(item)}</p>`).join('');
+const messages = (items = []) => items.map((item) => `<article class="story-message ${item.author === 'Claudia' ? 'claudia' : 'marcos'}"><small>${esc(item.author)}</small><p>${esc(item.text)}</p></article>`).join('');
+const moment = (item) => `<section class="story-moment">${item.date ? `<p class="story-date">${esc(item.date)}</p>` : ''}${paragraphs(item.text, 'story-copy')}${messages(item.messages)}</section>`;
+export function storySceneMarkup(reward, scene, index) {
+  const photo = scene.media?.available && scene.media.url ? `<figure class="story-photo"><img src="${esc(scene.media.url)}" alt="${esc(scene.media.alt)}"><figcaption>${esc(scene.caption || '')}</figcaption></figure>` : (scene.hasMedia || scene.asset) ? missing() : '';
+  const title = scene.title ? `<h1>${esc(scene.title)}</h1>` : '';
+  const date = scene.date ? `<p class="story-date">${esc(scene.date)}</p>` : '';
+  const beats = scene.beats?.length ? `<div class="story-beats">${scene.beats.map((beat) => `<p>${esc(beat)}</p>`).join('')}</div>` : '';
+  return `<section class="reward-story story-layout-${esc(scene.layout || 'standard')}" data-scene="${index}" tabindex="-1" aria-labelledby="story-title-${index}"><header>${date}${scene.title ? title.replace('<h1>', `<h1 id="story-title-${index}">`) : `<h1 id="story-title-${index}" class="visually-hidden">${esc(reward.title)}</h1>`}</header>${paragraphs(scene.text, 'story-copy')}${messages(scene.messages)}${scene.moments?.map(moment).join('') || ''}${beats}${photo}${paragraphs(scene.after, 'story-copy story-after')}${scene.final ? `<p class="story-final">${esc(scene.final)}</p>` : ''}</section>`;
+}
 export const blockMarkup = (block) => {
   const header = block.message ? `<p>${esc(block.message)}</p>` : '';
   if (block.type === 'PHOTO') return `<article class="reward-block">${header}${media(block.media, 'PHOTO')}${block.caption ? `<small>${esc(block.caption)}</small>` : ''}</article>`;
@@ -30,6 +40,7 @@ export function rewardMarkup(reward) {
   if (reward.type === 'VOUCHER') return `${header}${voucher(reward)}`;
   if (reward.type === 'CHOICE') return `${header}${choice(reward)}`;
   if (reward.type === 'FINAL') return `${header}<div class="reward-final-blocks">${(reward.blocks || []).map(blockMarkup).join('')}</div>`;
+  if (reward.type === 'STORY') return storySceneMarkup(reward, reward.scenes?.[0] || {}, 0);
   return `${header}<div class="reward-missing">Contenido pendiente</div>`;
 }
 export function rewardsListMarkup(slots, meta) {

@@ -1,4 +1,4 @@
-export const REWARD_TYPES = new Set(['PHOTO', 'TEXT', 'AUDIO', 'VIDEO', 'SONG', 'VOUCHER', 'CHOICE', 'FINAL']);
+export const REWARD_TYPES = new Set(['PHOTO', 'TEXT', 'AUDIO', 'VIDEO', 'SONG', 'VOUCHER', 'CHOICE', 'FINAL', 'STORY']);
 
 // This file is packaged only with Lambda. Replace TODO_REWARD values and asset keys here.
 // Never place private media under static/ or content/.
@@ -12,7 +12,20 @@ export const rewardConfig = {
   },
   rewards: [
     { id: 'reward-01', puzzleId: '01', type: 'PHOTO', title: 'TODO_REWARD_01_TITLE', message: 'TODO_REWARD_01_MESSAGE', caption: 'TODO_REWARD_01_CAPTION', asset: { key: 'rewards/reward-01/photo.jpg', alt: 'TODO_REWARD_01_ALT' }, enabled: true },
-    { id: 'reward-02', puzzleId: '02', type: 'SONG', title: 'TODO_REWARD_02_TITLE', message: 'TODO_REWARD_02_MESSAGE', song: { title: 'TODO_REWARD_02_SONG_TITLE', artist: 'TODO_REWARD_02_ARTIST', url: 'https://example.com/TODO_REWARD_02_SONG' }, enabled: true },
+    {
+      id: 'reward-02', puzzleId: '02', type: 'STORY', title: 'Nuestra historia hasta ahora', message: 'Nuestra historia hasta ahora', enabled: true,
+      scenes: [
+        { id: 'intro', layout: 'intro', title: 'Nuestra historia hasta ahora', text: ['Algunas cosas empiezan sin que uno se dé cuenta de que están empezando.', 'Esta es una de esas.'], action: 'EMPEZAR' },
+        { id: 'noviembre', layout: 'conversation', date: '9 de noviembre de 2025', title: 'Antes de que esto tuviera nombre', messages: [{ author: 'Marcos', text: 'Me importa muy poco honestamente, te quiero ver, me gusta pasar tiempo contigo' }, { author: 'Claudia', text: 'Me encanta!!' }], text: ['En ese momento parecía simplemente eso: ganas de vernos.'] },
+        { id: 'diciembre', layout: 'conversation playful', date: '6 de diciembre de 2025', title: 'Después apareció esto...', messages: [{ author: 'Claudia', text: 'Sabes que…creo que ya te estoy extrañando un poco, solo un poco' }, { author: 'Marcos', text: 'Nope, porque yo también te extraño' }, { author: 'Claudia', text: 'Decís que es absurdo?' }, { author: 'Marcos', text: 'No sabía que esto era un número discreto, para mí es una variable binaria' }], text: ['Evidentemente el romanticismo nunca estuvo peleado con ser ingeniero.'] },
+        { id: 'enero', layout: 'photo-story', date: 'Enero de 2026', title: 'Batman tenía un problema.', text: ['Había una parte muy importante de mi vida que todavía no conocías.', 'Y eso hacía que algunos días nuestros mundos tuvieran que seguir separados.'], messages: [{ author: 'Claudia', text: 'Por qué me haces feliz' }, { author: 'Marcos', text: 'Vos me haces feliz...' }, { author: 'Marcos', text: 'yo también te quiero involucrar más en mi vida' }, { author: 'Marcos', text: 'Realmente me gustaría que te conocieran, porque ellos me ven bien, y vos sos la razón.' }], asset: { key: 'rewards/reward-02/19enero.jpg', alt: 'Una fotografía de Marcos y Claudia en enero de 2026.' }, after: ['Todavía faltaba para que eso pasara.', 'Pero creo que para entonces yo ya sabía que quería que pasara.'] },
+        { id: 'marzo', layout: 'sparse', moments: [{ date: '17 de marzo de 2026', messages: [{ author: 'Marcos', text: 'Yo te amo' }] }, { date: '20 de marzo de 2026', messages: [{ author: 'Claudia', text: 'Te amo' }, { author: 'Marcos', text: 'Yo mas' }] }] },
+        { id: 'abril', layout: 'conversation', date: '7 de abril de 2026', text: ['En algún momento también cambió cómo nos hablábamos.'], messages: [{ author: 'Claudia', text: 'Que bueno amor te haya ido bien!!' }, { author: 'Marcos', text: 'Te amo... Me gusta que me digas amor' }, { author: 'Marcos', text: 'Amor' }, { author: 'Claudia', text: 'Creo que es mejor que mi princeso 😂' }], moments: [{ date: '21 de abril de 2026', text: ['Y hasta intentamos resolver una cuestión bastante importante...'], messages: [{ author: 'Claudia', text: 'Empezamos a hablar el 7/10 por instagram 🙂' }, { author: 'Marcos', text: 'vos decis que deberiamos poner una fecha? quizas la primera vez que te vi en persona...' }] }], after: ['Todavía no sé exactamente qué día empezó todo.', 'Por suerte, tampoco importa demasiado.'] },
+        { id: 'mayo', layout: 'photo-led', date: '8 de mayo de 2026', title: 'Ya éramos nosotros.', asset: { key: 'rewards/reward-02/8mayo.jpg', alt: 'Una fotografía de Marcos y Claudia en mayo de 2026.' }, moments: [{ date: '22 de mayo de 2026', messages: [{ author: 'Claudia', text: 'Te amo mucho y soy muy feliz a tu lado. Te voy a extrañar mucho.' }, { author: 'Marcos', text: 'me olvidé de poner una foto nuestra que imprimí para que te lleves de recuerdo' }] }] },
+        { id: 'septiembre', layout: 'present', text: ['Después hubo muchas cosas más.'], beats: ['Entrenamientos.', 'Cenas.', 'Viajes.', 'Días buenos.', 'Algún día no tan bueno.', 'Mimos.', 'Risas.', 'Planes.', 'Muchísimos mensajes.'], after: ['Y un montón de vida en el medio.'], date: '20 de septiembre de 2026', asset: { key: 'rewards/reward-02/20septiembre.jpg', alt: 'Una fotografía de Marcos y Claudia en septiembre de 2026.' }, caption: 'Nosotros, hoy.' },
+        { id: 'final', layout: 'final', text: ['En unos días te toca irte lejos por un tiempo.', 'Hice esto porque quería encontrar una forma de acompañarte un poquito durante el viaje.', 'Así que escondí algunos pedacitos de nosotros entre números.', 'No sustituye tenerte cerca, pero por ahora tendrá que servir.'], final: 'Te amo. Más.' }
+      ]
+    },
     { id: 'reward-03', puzzleId: '03', type: 'VIDEO', title: 'TODO_REWARD_03_TITLE', message: 'TODO_REWARD_03_MESSAGE', asset: { key: 'rewards/reward-03/video.mp4', alt: 'TODO_REWARD_03_VIDEO_DESCRIPTION' }, poster: { key: 'rewards/reward-03/poster.jpg', alt: 'TODO_REWARD_03_POSTER_ALT' }, transcript: 'TODO_REWARD_03_TRANSCRIPT', enabled: true },
     { id: 'reward-04', puzzleId: '04', type: 'CHOICE', title: 'TODO_REWARD_04_TITLE', message: 'TODO_REWARD_04_MESSAGE', permanent: true, showAllChoices: false, options: [{ id: 'tierna', label: 'TODO_REWARD_04_OPTION_A', description: 'TODO_REWARD_04_OPTION_A_DESCRIPTION' }, { id: 'peligrosa', label: 'TODO_REWARD_04_OPTION_B', description: 'TODO_REWARD_04_OPTION_B_DESCRIPTION' }], enabled: true },
     { id: 'reward-05', puzzleId: '05', type: 'VOUCHER', title: 'TODO_REWARD_05_TITLE', message: 'TODO_REWARD_05_MESSAGE', validFrom: '2026-10-21', expiresAt: null, conditions: 'TODO_REWARD_05_CONDITIONS', enabled: true },
@@ -37,6 +50,10 @@ export function validateRewardConfig(config = rewardConfig, puzzleIds = ['01', '
     if (reward.type === 'SONG' && (!reward.song || !isUrl(reward.song.url))) errors.push(`${label} needs a valid song URL`);
     if (reward.type === 'CHOICE' && (!Array.isArray(reward.options) || reward.options.length < 2 || new Set(reward.options.map((option) => option.id)).size !== reward.options.length)) errors.push(`${label} needs at least two uniquely identified options`);
     if (reward.type === 'FINAL') validateBlocks(reward.blocks, label, errors);
+    if (reward.type === 'STORY') {
+      if (!Array.isArray(reward.scenes) || reward.scenes.length !== 9) errors.push(`${label} must contain exactly nine story scenes`);
+      reward.scenes?.forEach((scene, sceneIndex) => { if (!scene.id) errors.push(`${label}.scenes[${sceneIndex}] needs an id`); if (scene.asset) validateAsset(scene.asset, `${label}.scenes[${sceneIndex}]`, errors); });
+    }
   });
   if (mapped.size !== puzzleIds.length) errors.push('every production puzzle must have exactly one reward');
   if (config.pieces?.enabled) validateBlocks(config.pieces.finalReward?.blocks, 'pieces.finalReward', errors);
