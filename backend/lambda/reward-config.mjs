@@ -45,7 +45,15 @@ export const rewardConfig = {
       ]
     },
     { id: 'reward-03', puzzleId: '03', type: 'VIDEO', title: 'TODO_REWARD_03_TITLE', message: 'TODO_REWARD_03_MESSAGE', asset: { key: 'rewards/reward-03/video.mp4', alt: 'TODO_REWARD_03_VIDEO_DESCRIPTION' }, poster: { key: 'rewards/reward-03/poster.jpg', alt: 'TODO_REWARD_03_POSTER_ALT' }, transcript: 'TODO_REWARD_03_TRANSCRIPT', enabled: true },
-    { id: 'reward-04', puzzleId: '04', type: 'CHOICE', title: 'TODO_REWARD_04_TITLE', message: 'TODO_REWARD_04_MESSAGE', permanent: true, showAllChoices: false, options: [{ id: 'tierna', label: 'TODO_REWARD_04_OPTION_A', description: 'TODO_REWARD_04_OPTION_A_DESCRIPTION' }, { id: 'peligrosa', label: 'TODO_REWARD_04_OPTION_B', description: 'TODO_REWARD_04_OPTION_B_DESCRIPTION' }], enabled: true },
+    { id: 'reward-04', puzzleId: '04', type: 'STORY', storyKind: 'voucher-book', title: 'Talonario de vales', message: 'Talonario de vales', enabled: true,
+      vouchers: [
+        { id: 'cafe', number: 1, title: 'Un café en una cafetería fantástica', asset: { key: 'rewards/reward-04/vale-01-cafe.png', alt: 'Vale 1 de 6: un café en una cafetería fantástica.' } },
+        { id: 'pascualina', number: 2, title: 'Una Pascualina y postre fit', asset: { key: 'rewards/reward-04/vale-02-pascualina.png', alt: 'Vale 2 de 6: una Pascualina y postre fit.' } },
+        { id: 'uber-guardia', number: 3, title: 'Uber en fin de semana de guardia', asset: { key: 'rewards/reward-04/vale-03-uber-guardia.png', alt: 'Vale 3 de 6: Uber en fin de semana de guardia.' } },
+        { id: 'besos-olga', number: 4, title: 'Una sesión de besos de Olga', asset: { key: 'rewards/reward-04/vale-04-besos-olga.png', alt: 'Vale 4 de 6: una sesión de besos de Olga.' } },
+        { id: 'cita-sorpresa', number: 5, title: 'Una cita sorpresa', asset: { key: 'rewards/reward-04/vale-05-cita-sorpresa.png', alt: 'Vale 5 de 6: una cita sorpresa.' } },
+        { id: 'fin-de-semana', number: 6, title: 'Un fin de semana juntos', asset: { key: 'rewards/reward-04/vale-06-fin-de-semana.png', alt: 'Vale 6 de 6: un fin de semana juntos.' } }
+      ] },
     { id: 'reward-05', puzzleId: '05', type: 'STORY', storyKind: 'te-amo-mas', title: 'Te amo más', message: 'Te amo más', dataset: teAmoMasDataset, enabled: true,
       scenes: [
         { id: 'investigacion', layout: 'analysis-intro', text: ['Hay una discusión que tenemos hace tiempo.', 'Vos decís:', '"Te amo."', 'Y yo, inevitablemente:', '"Te amo más."', 'Así que decidí que ya era hora de determinar si tengo alguna evidencia para semejante afirmación.'], final: 'Con datos.', action: 'COMENZAR INVESTIGACIÓN' },
@@ -85,8 +93,13 @@ export function validateRewardConfig(config = rewardConfig, puzzleIds = ['01', '
     if (reward.type === 'CHOICE' && (!Array.isArray(reward.options) || reward.options.length < 2 || new Set(reward.options.map((option) => option.id)).size !== reward.options.length)) errors.push(`${label} needs at least two uniquely identified options`);
     if (reward.type === 'FINAL') validateBlocks(reward.blocks, label, errors);
     if (reward.type === 'STORY') {
-      if (!Array.isArray(reward.scenes) || reward.scenes.length < 2) errors.push(`${label} must contain story scenes`);
-      reward.scenes?.forEach((scene, sceneIndex) => { if (!scene.id) errors.push(`${label}.scenes[${sceneIndex}] needs an id`); if (scene.asset) validateAsset(scene.asset, `${label}.scenes[${sceneIndex}]`, errors); });
+      if (reward.storyKind === 'voucher-book') {
+        if (!Array.isArray(reward.vouchers) || reward.vouchers.length !== 6) errors.push(`${label} must contain six vouchers`);
+        reward.vouchers?.forEach((voucher, voucherIndex) => { if (!voucher.id || voucher.number !== voucherIndex + 1) errors.push(`${label}.vouchers[${voucherIndex}] needs an ordered id`); validateAsset(voucher.asset, `${label}.vouchers[${voucherIndex}]`, errors); });
+      } else {
+        if (!Array.isArray(reward.scenes) || reward.scenes.length < 2) errors.push(`${label} must contain story scenes`);
+        reward.scenes?.forEach((scene, sceneIndex) => { if (!scene.id) errors.push(`${label}.scenes[${sceneIndex}] needs an id`); if (scene.asset) validateAsset(scene.asset, `${label}.scenes[${sceneIndex}]`, errors); });
+      }
     }
   });
   if (mapped.size !== puzzleIds.length) errors.push('every production puzzle must have exactly one reward');
