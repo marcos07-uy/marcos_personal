@@ -70,7 +70,7 @@ test('offline support caches only the Sudoku shell and never API responses', asy
 test('reward configuration maps every puzzle once and validates all supported placeholders', () => {
   assert.deepEqual(validateRewardConfig(rewardConfig), []);
   assert.deepEqual(rewardConfig.rewards.map((reward) => reward.puzzleId), ['01', '02', '03', '04', '05', '06']);
-  assert.deepEqual(rewardConfig.rewards.map((reward) => reward.type), ['STORY', 'STORY', 'VIDEO', 'CHOICE', 'STORY', 'FINAL']);
+  assert.deepEqual(rewardConfig.rewards.map((reward) => reward.type), ['STORY', 'STORY', 'VIDEO', 'STORY', 'STORY', 'FINAL']);
   assert.equal(rewardConfig.pieces.enabled, true);
 });
 test('Reward #2 is the nine-scene private story associated with Sudoku #2', () => {
@@ -89,6 +89,14 @@ test('Reward #1 is the five-scene private photo story associated with Sudoku #1'
   assert.ok(!renderer.storySceneMarkup(reward, { ...december, hasMedia: false, asset: undefined }, 3).includes('ya no había vuelta atrás'));
   assert.match(renderer.storySceneMarkup(reward, { ...december, hasMedia: false, asset: undefined }, 3, { 'stage:sin-vuelta-atras': true }), /ya no había vuelta atrás/);
 });
+test('Reward #4 is an ordered private voucher book associated with Sudoku #4', async () => {
+  const renderer = await import('../static/sudoku/rewards.js'); const reward = rewardConfig.rewards.find((item) => item.id === 'reward-04');
+  assert.equal(reward.puzzleId, '04'); assert.equal(reward.storyKind, 'voucher-book'); assert.deepEqual(reward.vouchers.map((voucher) => voucher.number), [1,2,3,4,5,6]);
+  assert.deepEqual(reward.vouchers.map((voucher) => voucher.asset.key.split('/').at(-1)), ['vale-01-cafe.png', 'vale-02-pascualina.png', 'vale-03-uber-guardia.png', 'vale-04-besos-olga.png', 'vale-05-cita-sorpresa.png', 'vale-06-fin-de-semana.png']);
+  const publicReward = { ...reward, vouchers: reward.vouchers.map((voucher) => ({ ...voucher, filename: voucher.asset.key.split('/').at(-1), media: { available: true, url: `https://example.test/${voucher.id}`, alt: voucher.asset.alt } })) };
+  assert.match(renderer.voucherBookMarkup(publicReward, { revealed: true }), /data-voucher-open="0"/); const viewer = renderer.voucherBookMarkup(publicReward, { revealed: true, selected: 0 }); assert.match(viewer, /GUARDAR VALE/); assert.match(viewer, /download="vale-01-cafe.png"/); assert.match(viewer, /disabled/);
+  assert.ok(!JSON.stringify(reward).includes('/tmp/'));
+});
 test('Reward #5 derives its audited Te amo más statistics from one dataset', () => {
   const reward = rewardConfig.rewards.find((item) => item.id === 'reward-05'); const metrics = teAmoMasMetrics();
   assert.equal(reward.puzzleId, '05'); assert.equal(reward.storyKind, 'te-amo-mas'); assert.equal(reward.scenes.length, 14);
@@ -96,11 +104,11 @@ test('Reward #5 derives its audited Te amo más statistics from one dataset', ()
   assert.equal(metrics.teAmoPer1000Marcos, 133 / 19909 * 1000); assert.equal(metrics.teAmoPer1000Claudia, 120 / 17182 * 1000); assert.ok(metrics.teAmoPer1000Claudia > metrics.teAmoPer1000Marcos);
   assert.equal(teAmoMasDataset.historicalEvents.firstMas.date, '28 de febrero de 2026'); assert.equal(teAmoMasDataset.historicalEvents.firstTeAmo.messages.at(-1).author, 'Marcos'); assert.equal(teAmoMasDataset.historicalEvents.finalExample.date, '25 de septiembre de 2026');
 });
-test('reward validation rejects unsafe mappings, broken choices and invalid final blocks', () => {
-  const broken = structuredClone(rewardConfig); broken.rewards[0].puzzleId = '99'; broken.rewards[3].options = [{ id: 'same' }, { id: 'same' }]; broken.rewards[5].blocks = [];
+test('reward validation rejects unsafe mappings, broken voucher books and invalid final blocks', () => {
+  const broken = structuredClone(rewardConfig); broken.rewards[0].puzzleId = '99'; broken.rewards[3].vouchers = []; broken.rewards[5].blocks = [];
   const errors = validateRewardConfig(broken);
   assert.ok(errors.some((error) => /valid puzzle/.test(error)));
-  assert.ok(errors.some((error) => /at least two/.test(error)));
+  assert.ok(errors.some((error) => /six vouchers/.test(error)));
   assert.ok(errors.some((error) => /at least one block/.test(error)));
 });
 test('reward API keeps private access server-authorized and supports an authenticated developer preview only', async () => {
@@ -109,7 +117,7 @@ test('reward API keeps private access server-authorized and supports an authenti
   assert.match(lambda, /Completá el Sudoku correspondiente para abrir esta recompensa/);
   assert.match(lambda, /HeadObjectCommand/);
   assert.match(lambda, /getSignedUrl/);
-  assert.match(lambda, /session\.developerMode && \['reward-01', 'reward-02', 'reward-05'\]\.includes\(reward\.id\)/);
+  assert.match(lambda, /session\.developerMode && \['reward-01', 'reward-02', 'reward-04', 'reward-05'\]\.includes\(reward\.id\)/);
   assert.ok(!preview.includes('rewards/reward-'));
   assert.match(preview, /TODO_REWARD_01_TITLE/);
 });
@@ -119,6 +127,7 @@ test('story renderer supports all scenes, controls, missing private media and re
   story.scenes.forEach((scene, index) => { const markup = renderer.storySceneMarkup(story, { ...scene, hasMedia: Boolean(scene.asset), media: scene.asset ? { available: false } : undefined, asset: undefined }, index); assert.match(markup, /reward-story/); if (scene.asset) assert.match(markup, /Contenido pendiente/); });
   assert.match(app, /storyProgressKey/); assert.match(app, /id="previous"/); assert.match(app, /Volver a mis recompensas/); assert.match(css, /prefers-reduced-motion: reduce/); assert.match(css, /env\(safe-area-inset-bottom\)/);
   assert.match(app, /REVELAR RECUERDO/); assert.match(css, /story-layout-landscape/);
+  assert.match(app, /showVoucherBook/); assert.match(css, /object-fit:contain/);
 });
 test('Reward #5 renders derived Spanish statistics and gates its interactive branches', async () => {
   const renderer = await import('../static/sudoku/rewards.js'); const app = await import('node:fs/promises').then((fs) => fs.readFile(new URL('../static/sudoku/app.js', import.meta.url), 'utf8'));
