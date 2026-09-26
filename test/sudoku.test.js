@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { analyzeDifficulty, candidatesFor, conflicts, hintFor, isCompleteAndValid, removePeerCandidate, solve } from '../static/sudoku/sudoku-core.js';
 import { zonedTimeToEpoch } from '../backend/lambda/timezone.mjs';
 import { isValidGameState } from '../backend/lambda/validation.mjs';
-import { rewardConfig, validateRewardConfig } from '../backend/lambda/reward-config.mjs';
+import { rewardConfig, teAmoMasDataset, teAmoMasMetrics, validateRewardConfig } from '../backend/lambda/reward-config.mjs';
 
 const toBoard = (text) => Array.from({ length: 9 }, (_, row) => [...text.slice(row * 9, row * 9 + 9)].map(Number));
 const production = [
@@ -70,7 +70,7 @@ test('offline support caches only the Sudoku shell and never API responses', asy
 test('reward configuration maps every puzzle once and validates all supported placeholders', () => {
   assert.deepEqual(validateRewardConfig(rewardConfig), []);
   assert.deepEqual(rewardConfig.rewards.map((reward) => reward.puzzleId), ['01', '02', '03', '04', '05', '06']);
-  assert.deepEqual(rewardConfig.rewards.map((reward) => reward.type), ['PHOTO', 'STORY', 'VIDEO', 'CHOICE', 'VOUCHER', 'FINAL']);
+  assert.deepEqual(rewardConfig.rewards.map((reward) => reward.type), ['PHOTO', 'STORY', 'VIDEO', 'CHOICE', 'STORY', 'FINAL']);
   assert.equal(rewardConfig.pieces.enabled, true);
 });
 test('Reward #2 is the nine-scene private story associated with Sudoku #2', () => {
@@ -79,6 +79,13 @@ test('Reward #2 is the nine-scene private story associated with Sudoku #2', () =
   assert.deepEqual(story.scenes.filter((scene) => scene.asset).map((scene) => scene.asset.key), ['rewards/reward-02/19enero.jpg', 'rewards/reward-02/8mayo.jpg', 'rewards/reward-02/20septiembre.jpg']);
   assert.equal(story.scenes.at(-1).final, 'Te amo. Más.');
   assert.ok(!JSON.stringify(story).includes('/tmp/'));
+});
+test('Reward #5 derives its audited Te amo más statistics from one dataset', () => {
+  const reward = rewardConfig.rewards.find((item) => item.id === 'reward-05'); const metrics = teAmoMasMetrics();
+  assert.equal(reward.puzzleId, '05'); assert.equal(reward.storyKind, 'te-amo-mas'); assert.equal(reward.scenes.length, 14);
+  assert.equal(metrics.totalMessages, 37091); assert.equal(metrics.totalTeAmoMessages, 253); assert.equal(metrics.rawDifference, 13);
+  assert.equal(metrics.teAmoPer1000Marcos, 133 / 19909 * 1000); assert.equal(metrics.teAmoPer1000Claudia, 120 / 17182 * 1000); assert.ok(metrics.teAmoPer1000Claudia > metrics.teAmoPer1000Marcos);
+  assert.equal(teAmoMasDataset.historicalEvents.firstMas.date, '28 de febrero de 2026'); assert.equal(teAmoMasDataset.historicalEvents.firstTeAmo.messages.at(-1).author, 'Marcos'); assert.equal(teAmoMasDataset.historicalEvents.finalExample.date, '25 de septiembre de 2026');
 });
 test('reward validation rejects unsafe mappings, broken choices and invalid final blocks', () => {
   const broken = structuredClone(rewardConfig); broken.rewards[0].puzzleId = '99'; broken.rewards[3].options = [{ id: 'same' }, { id: 'same' }]; broken.rewards[5].blocks = [];
@@ -93,7 +100,7 @@ test('reward API keeps private access server-authorized and supports an authenti
   assert.match(lambda, /Completá el Sudoku correspondiente para abrir esta recompensa/);
   assert.match(lambda, /HeadObjectCommand/);
   assert.match(lambda, /getSignedUrl/);
-  assert.match(lambda, /session\.developerMode && reward\.id === 'reward-02'/);
+  assert.match(lambda, /session\.developerMode && \['reward-02', 'reward-05'\]\.includes\(reward\.id\)/);
   assert.ok(!preview.includes('rewards/reward-'));
   assert.match(preview, /TODO_REWARD_01_TITLE/);
 });
@@ -102,6 +109,14 @@ test('story renderer supports all scenes, controls, missing private media and re
   const story = rewardConfig.rewards.find((reward) => reward.id === 'reward-02');
   story.scenes.forEach((scene, index) => { const markup = renderer.storySceneMarkup(story, { ...scene, hasMedia: Boolean(scene.asset), media: scene.asset ? { available: false } : undefined, asset: undefined }, index); assert.match(markup, /reward-story/); if (scene.asset) assert.match(markup, /Contenido pendiente/); });
   assert.match(app, /storyProgressKey/); assert.match(app, /id="previous"/); assert.match(app, /Volver a mis recompensas/); assert.match(css, /prefers-reduced-motion: reduce/); assert.match(css, /env\(safe-area-inset-bottom\)/);
+});
+test('Reward #5 renders derived Spanish statistics and gates its interactive branches', async () => {
+  const renderer = await import('../static/sudoku/rewards.js'); const app = await import('node:fs/promises').then((fs) => fs.readFile(new URL('../static/sudoku/app.js', import.meta.url), 'utf8'));
+  const reward = rewardConfig.rewards.find((item) => item.id === 'reward-05'); const raw = reward.scenes.find((scene) => scene.id === 'victoria'); const normalized = reward.scenes.find((scene) => scene.id === 'normalizacion');
+  reward.scenes.forEach((scene, index) => assert.match(renderer.storySceneMarkup(reward, scene, index, { predictionTeAmo: 'marcos', predictionFirstTeAmo: 'marcos', predictionFirstTeAmoRevealed: true, closeInvestigation: 'yes' }), /analysis-story/));
+  assert.match(renderer.storySceneMarkup(reward, raw, 3), /133/); assert.match(renderer.storySceneMarkup(reward, raw, 3), /120/);
+  const rates = renderer.storySceneMarkup(reward, normalized, 5); assert.match(rates, /6,68/); assert.match(rates, /6,98/); assert.match(rates, /SÍ, OBVIAMENTE/);
+  assert.match(app, /data-story-choice/); assert.match(app, /Revealed/); assert.match(app, /gated/);
 });
 test('administrator controls and the shared wall remain server-authorized', async () => {
   const lambda = await import('node:fs/promises').then((fs) => fs.readFile(new URL('../backend/lambda/index.mjs', import.meta.url), 'utf8'));
