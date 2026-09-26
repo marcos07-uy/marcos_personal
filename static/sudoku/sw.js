@@ -1,8 +1,8 @@
-const CACHE = 'claudia-sudoku-shell-v1';
+const CACHE = 'claudia-sudoku-shell-v2';
 const SHELL = ['/sudoku/', '/sudoku/app.js', '/sudoku/sudoku-core.js'];
 
 self.addEventListener('install', (event) => event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(SHELL)).then(() => self.skipWaiting())));
-self.addEventListener('activate', (event) => event.waitUntil(self.clients.claim()));
+self.addEventListener('activate', (event) => event.waitUntil(caches.keys().then((keys) => Promise.all(keys.filter((key) => key.startsWith('claudia-sudoku-shell-') && key !== CACHE).map((key) => caches.delete(key)))).then(() => self.clients.claim()));
 self.addEventListener('fetch', (event) => {
   const request = event.request;
   const url = new URL(request.url);
