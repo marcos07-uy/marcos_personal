@@ -39,7 +39,8 @@ export function storySceneMarkup(reward, scene, index, state = {}) {
   const title = scene.title ? `<h1>${esc(scene.title)}</h1>` : '';
   const date = scene.date ? `<p class="story-date">${esc(scene.date)}</p>` : '';
   const beats = scene.beats?.length ? `<div class="story-beats">${scene.beats.map((beat) => `<p>${esc(beat)}</p>`).join('')}</div>` : '';
-  return `<section class="reward-story story-layout-${esc(scene.layout || 'standard')}" data-scene="${index}" tabindex="-1" aria-labelledby="story-title-${index}"><header>${date}${scene.title ? title.replace('<h1>', `<h1 id="story-title-${index}">`) : `<h1 id="story-title-${index}" class="visually-hidden">${esc(reward.title)}</h1>`}</header>${paragraphs(scene.text, 'story-copy')}${messages(scene.messages)}${scene.moments?.map(moment).join('') || ''}${beats}${photo}${paragraphs(scene.after, 'story-copy story-after')}${scene.final ? `<p class="story-final">${esc(scene.final)}</p>` : ''}</section>`;
+  const staged = scene.staged && !state[`stage:${scene.id}`]; const copy = staged ? '' : `${paragraphs(scene.text, 'story-copy')}${messages(scene.messages)}${scene.moments?.map(moment).join('') || ''}${beats}${paragraphs(scene.after, 'story-copy story-after')}${scene.final ? `<p class="story-final">${esc(scene.final)}</p>` : ''}`;
+  return `<section class="reward-story story-layout-${esc(scene.layout || 'standard')}" data-scene="${index}" tabindex="-1" aria-labelledby="story-title-${index}"><header>${date}${scene.title ? title.replace('<h1>', `<h1 id="story-title-${index}">`) : `<h1 id="story-title-${index}" class="visually-hidden">${esc(reward.title)}</h1>`}</header>${scene.photoFirst ? `${photo}${copy}` : `${copy}${photo}`}</section>`;
 }
 export const blockMarkup = (block) => {
   const header = block.message ? `<p>${esc(block.message)}</p>` : '';
