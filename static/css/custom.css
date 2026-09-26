@@ -301,6 +301,7 @@
 @media (prefers-reduced-motion: reduce) { .story-progress span,.reward-story { transition:none; animation:none; } }
 @media (max-width:380px) { .story-detail { padding-left:2px; padding-right:2px; }.story-message { max-width:92%; }.story-nav { grid-template-columns:1fr; }.story-nav #previous { grid-row:2; } }
 .story-detail,.reward-story { min-width:0; }.reward-story { overflow-wrap:anywhere; }
+.story-layout-intro,.story-layout-sparse { min-height:calc(100dvh - 300px); }
 .sudoku-tool-help { min-height:2.5em; margin:8px 2px 0 !important; color:#d9e4da !important; font-size:12px; line-height:1.35 !important; }
 .sudoku-board { display:grid !important; gap:1px !important; padding:2px !important; background:#10251e !important; }
 .sudoku-cell { border:0 !important; outline:1px solid rgba(35,62,51,.72); }
