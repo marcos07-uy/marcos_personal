@@ -34,6 +34,22 @@ Ejemplo ficticio de cada tipo:
 
 Una elección permanente muestra una advertencia y exige confirmación; Lambda impide cambiarla incluso si se manipula el navegador.
 
+## Reward #2 — estado de producción
+
+**Estado: cerrada y desplegada.** `reward-02` está asociada únicamente al Sudoku `02` y usa el tipo `STORY`. Su contenido final vive exclusivamente en `backend/lambda/reward-config.mjs`: son nueve escenas, con navegación manual, indicador discreto de escena y la última escena vista guardada localmente por perfil bajo `claudia-sudoku-story-v1-<perfil>-reward-02`.
+
+Las escenas con fotos usan estos objetos privados ya cargados y optimizados en el bucket de recompensas:
+
+```text
+rewards/reward-02/19enero.jpg
+rewards/reward-02/8mayo.jpg
+rewards/reward-02/20septiembre.jpg
+```
+
+No hay copias de estas fotos en Git, `static/` ni Hugo. Lambda sólo expone URLs firmadas de cinco minutos después de verificar el desbloqueo. Si falta un objeto, la historia muestra **Contenido pendiente** sin revelar la clave del objeto.
+
+La experiencia se implementa en `static/sudoku/rewards.js`, `static/sudoku/app.js` y `static/css/custom.css`. Las correcciones de visibilidad del control **EMPEZAR** ya están incluidas: debe aparecer inmediatamente después del texto inicial en móvil, sin requerir scroll.
+
 ## Media privada y carga
 
 Usá claves predecibles bajo el bucket privado, por ejemplo:
@@ -73,6 +89,8 @@ Para ver los siete renderizadores de placeholder sin resolver Sudokus, sólo en 
 ```
 
 El fixture local `static/sudoku/dev-rewards.js` sólo contiene `TODO_REWARD` y nunca usa la API ni claves privadas. Para revisar una recompensa real con media privada, entrá al sitio desplegado usando el código de desarrollador y abrí `/sudoku/?sudokuDev=reward-preview`: sólo esa sesión autenticada puede previsualizar Reward #2 sin completarla. Las sesiones normales siguen exigiendo la finalización de su Sudoku correspondiente.
+
+Si el enlace de preview abre el catálogo normal, primero elegí **Cerrar sesión en este teléfono** e iniciá nuevamente con el código de desarrollador. Un token regular de Claudia no se transforma en sesión de preview por la URL.
 
 Después de editar la configuración y/o subir media, aplicá Lambda y publicá el frontend:
 

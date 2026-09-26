@@ -1,5 +1,13 @@
 # Pendientes
 
+## Reward #2 — cerrada
+
+- Implementada y desplegada como **Nuestra historia hasta ahora**.
+- Asociada al Sudoku #2; se mantiene bloqueada para Claudia hasta completarlo.
+- Las fotos finales ya están optimizadas y cargadas en el bucket privado bajo `rewards/reward-02/`.
+- El preview real requiere cerrar una sesión regular, ingresar con el código de desarrollador y abrir `/sudoku/?sudokuDev=reward-preview`.
+- No modificar el contenido narrativo final salvo una corrección técnica solicitada explícitamente.
+
 ## Notificaciones de Sudoku con Resend
 
 - Reemplazar el envío de emails mediante Amazon SES por Resend.
