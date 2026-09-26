@@ -70,7 +70,7 @@ test('offline support caches only the Sudoku shell and never API responses', asy
 test('reward configuration maps every puzzle once and validates all supported placeholders', () => {
   assert.deepEqual(validateRewardConfig(rewardConfig), []);
   assert.deepEqual(rewardConfig.rewards.map((reward) => reward.puzzleId), ['01', '02', '03', '04', '05', '06']);
-  assert.deepEqual(rewardConfig.rewards.map((reward) => reward.type), ['PHOTO', 'STORY', 'VIDEO', 'CHOICE', 'STORY', 'FINAL']);
+  assert.deepEqual(rewardConfig.rewards.map((reward) => reward.type), ['STORY', 'STORY', 'VIDEO', 'CHOICE', 'STORY', 'FINAL']);
   assert.equal(rewardConfig.pieces.enabled, true);
 });
 test('Reward #2 is the nine-scene private story associated with Sudoku #2', () => {
@@ -79,6 +79,15 @@ test('Reward #2 is the nine-scene private story associated with Sudoku #2', () =
   assert.deepEqual(story.scenes.filter((scene) => scene.asset).map((scene) => scene.asset.key), ['rewards/reward-02/19enero.jpg', 'rewards/reward-02/8mayo.jpg', 'rewards/reward-02/20septiembre.jpg']);
   assert.equal(story.scenes.at(-1).final, 'Te amo. Más.');
   assert.ok(!JSON.stringify(story).includes('/tmp/'));
+});
+test('Reward #1 is the five-scene private photo story associated with Sudoku #1', async () => {
+  const renderer = await import('../static/sudoku/rewards.js'); const reward = rewardConfig.rewards.find((item) => item.id === 'reward-01');
+  assert.equal(reward.puzzleId, '01'); assert.equal(reward.scenes.length, 5);
+  assert.deepEqual(reward.scenes.filter((scene) => scene.asset).map((scene) => scene.asset.key), ['rewards/reward-01/1era.jpg', 'rewards/reward-01/5dic.jpg']);
+  const december = reward.scenes.find((scene) => scene.id === 'sin-vuelta-atras');
+  assert.match(renderer.storySceneMarkup(reward, { ...december, hasMedia: true, media: { available: false }, asset: undefined }, 3), /Contenido pendiente/);
+  assert.ok(!renderer.storySceneMarkup(reward, { ...december, hasMedia: false, asset: undefined }, 3).includes('ya no había vuelta atrás'));
+  assert.match(renderer.storySceneMarkup(reward, { ...december, hasMedia: false, asset: undefined }, 3, { 'stage:sin-vuelta-atras': true }), /ya no había vuelta atrás/);
 });
 test('Reward #5 derives its audited Te amo más statistics from one dataset', () => {
   const reward = rewardConfig.rewards.find((item) => item.id === 'reward-05'); const metrics = teAmoMasMetrics();
@@ -100,7 +109,7 @@ test('reward API keeps private access server-authorized and supports an authenti
   assert.match(lambda, /Completá el Sudoku correspondiente para abrir esta recompensa/);
   assert.match(lambda, /HeadObjectCommand/);
   assert.match(lambda, /getSignedUrl/);
-  assert.match(lambda, /session\.developerMode && \['reward-02', 'reward-05'\]\.includes\(reward\.id\)/);
+  assert.match(lambda, /session\.developerMode && \['reward-01', 'reward-02', 'reward-05'\]\.includes\(reward\.id\)/);
   assert.ok(!preview.includes('rewards/reward-'));
   assert.match(preview, /TODO_REWARD_01_TITLE/);
 });
@@ -109,6 +118,7 @@ test('story renderer supports all scenes, controls, missing private media and re
   const story = rewardConfig.rewards.find((reward) => reward.id === 'reward-02');
   story.scenes.forEach((scene, index) => { const markup = renderer.storySceneMarkup(story, { ...scene, hasMedia: Boolean(scene.asset), media: scene.asset ? { available: false } : undefined, asset: undefined }, index); assert.match(markup, /reward-story/); if (scene.asset) assert.match(markup, /Contenido pendiente/); });
   assert.match(app, /storyProgressKey/); assert.match(app, /id="previous"/); assert.match(app, /Volver a mis recompensas/); assert.match(css, /prefers-reduced-motion: reduce/); assert.match(css, /env\(safe-area-inset-bottom\)/);
+  assert.match(app, /REVELAR RECUERDO/); assert.match(css, /story-layout-landscape/);
 });
 test('Reward #5 renders derived Spanish statistics and gates its interactive branches', async () => {
   const renderer = await import('../static/sudoku/rewards.js'); const app = await import('node:fs/promises').then((fs) => fs.readFile(new URL('../static/sudoku/app.js', import.meta.url), 'utf8'));

@@ -22,7 +22,14 @@ export const rewardConfig = {
     }
   },
   rewards: [
-    { id: 'reward-01', puzzleId: '01', type: 'PHOTO', title: 'TODO_REWARD_01_TITLE', message: 'TODO_REWARD_01_MESSAGE', caption: 'TODO_REWARD_01_CAPTION', asset: { key: 'rewards/reward-01/photo.jpg', alt: 'TODO_REWARD_01_ALT' }, enabled: true },
+    { id: 'reward-01', puzzleId: '01', type: 'STORY', title: 'Dos fotos', message: 'Dos fotos', enabled: true,
+      scenes: [
+        { id: 'primera-recompensa', layout: 'intro', title: 'Primera recompensa.', text: ['Para esta no tuve que buscar demasiado.', 'Elegí dos fotos.'], action: 'VER LA PRIMERA' },
+        { id: 'primera-foto', layout: 'photo-led', asset: { key: 'rewards/reward-01/1era.jpg', alt: 'La primera fotografía de Marcos y Claudia juntos.' }, photoFirst: true, text: ['Nuestra primera foto juntos.', 'Todavía estábamos aprendiendo a sacarnos fotos.', 'Algunas cosas, por suerte, salieron bastante mejor.'], action: 'SIGUIENTE' },
+        { id: 'diciembre', layout: 'sparse', text: ['La segunda es del 5 de diciembre.', 'Probablemente para vos sea simplemente una foto.', 'Para mí no.'], action: 'VER FOTO' },
+        { id: 'sin-vuelta-atras', layout: 'photo-led landscape', asset: { key: 'rewards/reward-01/5dic.jpg', alt: 'Una fotografía de Marcos y Claudia del 5 de diciembre.' }, photoFirst: true, staged: true, text: ['Me acuerdo de mirarte ese día y darme cuenta de algo bastante simple:', 'ya no había vuelta atrás.', 'Estaba completamente entregado.', 'Lo cual, considerando que todavía era diciembre, debería haberme preocupado un poco más.'] },
+        { id: 'como-funciona', layout: 'final', text: ['Y así funciona esto.', 'Mientras estés lejos, cada Sudoku va a tener algo nuestro esperándote del otro lado.', 'A veces va a ser un recuerdo.', 'A veces algo que probablemente me tomé demasiado en serio.', 'Y alguna cosa que todavía no sabés.', 'Esta era la primera.', 'Buen viaje, amor.', 'Nos vemos en el próximo.'] }
+      ] },
     {
       id: 'reward-02', puzzleId: '02', type: 'STORY', title: 'Nuestra historia hasta ahora', message: 'Nuestra historia hasta ahora', enabled: true,
       scenes: [
