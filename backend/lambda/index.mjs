@@ -84,12 +84,12 @@ async function publicReward(reward, state) {
   if (reward.type === 'VOUCHER') Object.assign(output, { validFrom: reward.validFrom, expiresAt: reward.expiresAt || null, conditions: reward.conditions || '' });
   if (reward.type === 'CHOICE') { const selected = reward.options.find((option) => option.id === state?.selectedOptionId) || null; output.choice = { permanent: reward.permanent === true, selectedOptionId: selected?.id || null, options: selected && !reward.showAllChoices ? [selected] : reward.options }; }
   if (reward.type === 'FINAL') output.blocks = await Promise.all(reward.blocks.map(publicBlock));
-  if (reward.type === 'STORY') output.scenes = await Promise.all(reward.scenes.map(async (scene) => ({ ...scene, hasMedia: Boolean(scene.asset), media: scene.asset ? await media(scene.asset) : undefined, asset: undefined })));
+  if (reward.type === 'STORY') Object.assign(output, { storyKind: reward.storyKind || '', dataset: reward.dataset || undefined, scenes: await Promise.all(reward.scenes.map(async (scene) => ({ ...scene, hasMedia: Boolean(scene.asset), media: scene.asset ? await media(scene.asset) : undefined, asset: undefined }))) });
   return output;
 }
 async function completionStatus(userId) { const entries = await Promise.all(puzzles.map(async (puzzle) => [puzzle.id, await progress(userId, puzzle.id)])); return Object.fromEntries(entries); }
 function unlocked(reward, completions) { return Boolean(completions[reward.puzzleId]?.completedAt); }
-async function rewardSlots(userId, developerPreview = false) { const completions = await completionStatus(userId); return Promise.all(rewardConfig.rewards.map(async (reward, index) => { const isUnlocked = unlocked(reward, completions) || (developerPreview && reward.id === 'reward-02'); const state = isUnlocked ? await rewardState(userId, reward.id) : null; return isUnlocked ? { slot: index + 1, unlocked: true, reward: await publicReward(reward, state) } : { slot: index + 1, unlocked: false, puzzleId: reward.puzzleId, message: `Completá el Sudoku #${reward.puzzleId} para desbloquearla.` }; })); }
+async function rewardSlots(userId, developerPreview = false) { const completions = await completionStatus(userId); return Promise.all(rewardConfig.rewards.map(async (reward, index) => { const isUnlocked = unlocked(reward, completions) || (developerPreview && ['reward-02', 'reward-05'].includes(reward.id)); const state = isUnlocked ? await rewardState(userId, reward.id) : null; return isUnlocked ? { slot: index + 1, unlocked: true, reward: await publicReward(reward, state) } : { slot: index + 1, unlocked: false, puzzleId: reward.puzzleId, message: `Completá el Sudoku #${reward.puzzleId} para desbloquearla.` }; })); }
 async function metaReward(userId) { const completions = await completionStatus(userId); const pieces = puzzles.filter((puzzle) => completions[puzzle.id]?.completedAt).length; const enabled = rewardConfig.pieces?.enabled === true; if (!enabled) return { enabled: false, pieces: 0, totalPieces: puzzles.length, unlocked: false }; if (pieces !== puzzles.length) return { enabled: true, pieces, totalPieces: puzzles.length, unlocked: false }; const final = rewardConfig.pieces.finalReward; return { enabled: true, pieces, totalPieces: puzzles.length, unlocked: true, reward: { id: final.id, type: final.type, title: final.title, message: final.message, blocks: await Promise.all(final.blocks.map(publicBlock)) } };
 }
 export async function handler(event) {
@@ -126,7 +126,7 @@ export async function handler(event) {
   const rewardMatch = path.match(/^\/rewards\/(reward-\d{2})(?:\/(open|choice))?$/);
   if (rewardMatch) {
     const reward = rewardById(rewardMatch[1]); if (!reward) return json(404, { error: 'Recompensa inexistente.' });
-    const completions = await completionStatus(userId); if (!unlocked(reward, completions) && !(session.developerMode && reward.id === 'reward-02')) return json(403, { error: 'Completá el Sudoku correspondiente para abrir esta recompensa.' });
+    const completions = await completionStatus(userId); if (!unlocked(reward, completions) && !(session.developerMode && ['reward-02', 'reward-05'].includes(reward.id))) return json(403, { error: 'Completá el Sudoku correspondiente para abrir esta recompensa.' });
     const action = rewardMatch[2]; const current = await rewardState(userId, reward.id);
     if (!action && method === 'GET') return json(200, { reward: await publicReward(reward, current) });
     if (action === 'open' && method === 'POST') { const saved = await saveRewardState(userId, reward.id, current, { openedAt: current?.openedAt || now() }); return json(200, { reward: await publicReward(reward, saved) }); }

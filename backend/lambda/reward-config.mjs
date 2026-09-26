@@ -1,5 +1,16 @@
 export const REWARD_TYPES = new Set(['PHOTO', 'TEXT', 'AUDIO', 'VIDEO', 'SONG', 'VOUCHER', 'CHOICE', 'FINAL', 'STORY']);
 
+export const teAmoMasDataset = {
+  endDate: '2026-09-25', messages: { marcos: 19909, claudia: 17182 }, teAmoMessages: { marcos: 133, claudia: 120 },
+  historicalEvents: {
+    firstMas: { date: '28 de febrero de 2026', messages: [{ author: 'Marcos', text: 'Te quiero Clau' }, { author: 'Claudia', text: 'Yo mas' }] },
+    firstTeAmo: { date: '17 de marzo de 2026', messages: [{ author: 'Claudia', text: 'Gracias por acompañarme 🥰' }, { author: 'Marcos', text: 'Obvio que te iba a acompañar' }, { author: 'Marcos', text: 'Yo te amo' }] },
+    masExample: { date: '20 de marzo de 2026', messages: [{ author: 'Claudia', text: 'Te amo' }, { author: 'Marcos', text: 'Yo mas' }] },
+    finalExample: { date: '25 de septiembre de 2026', messages: [{ author: 'Claudia', text: 'Te amo' }, { author: 'Marcos', text: 'Te amo +' }] }
+  }
+};
+export const teAmoMasMetrics = (dataset = teAmoMasDataset) => ({ totalMessages: dataset.messages.marcos + dataset.messages.claudia, totalTeAmoMessages: dataset.teAmoMessages.marcos + dataset.teAmoMessages.claudia, rawDifference: dataset.teAmoMessages.marcos - dataset.teAmoMessages.claudia, teAmoPer1000Marcos: dataset.teAmoMessages.marcos / dataset.messages.marcos * 1000, teAmoPer1000Claudia: dataset.teAmoMessages.claudia / dataset.messages.claudia * 1000 });
+
 // This file is packaged only with Lambda. Replace TODO_REWARD values and asset keys here.
 // Never place private media under static/ or content/.
 export const rewardConfig = {
@@ -28,7 +39,23 @@ export const rewardConfig = {
     },
     { id: 'reward-03', puzzleId: '03', type: 'VIDEO', title: 'TODO_REWARD_03_TITLE', message: 'TODO_REWARD_03_MESSAGE', asset: { key: 'rewards/reward-03/video.mp4', alt: 'TODO_REWARD_03_VIDEO_DESCRIPTION' }, poster: { key: 'rewards/reward-03/poster.jpg', alt: 'TODO_REWARD_03_POSTER_ALT' }, transcript: 'TODO_REWARD_03_TRANSCRIPT', enabled: true },
     { id: 'reward-04', puzzleId: '04', type: 'CHOICE', title: 'TODO_REWARD_04_TITLE', message: 'TODO_REWARD_04_MESSAGE', permanent: true, showAllChoices: false, options: [{ id: 'tierna', label: 'TODO_REWARD_04_OPTION_A', description: 'TODO_REWARD_04_OPTION_A_DESCRIPTION' }, { id: 'peligrosa', label: 'TODO_REWARD_04_OPTION_B', description: 'TODO_REWARD_04_OPTION_B_DESCRIPTION' }], enabled: true },
-    { id: 'reward-05', puzzleId: '05', type: 'VOUCHER', title: 'TODO_REWARD_05_TITLE', message: 'TODO_REWARD_05_MESSAGE', validFrom: '2026-10-21', expiresAt: null, conditions: 'TODO_REWARD_05_CONDITIONS', enabled: true },
+    { id: 'reward-05', puzzleId: '05', type: 'STORY', storyKind: 'te-amo-mas', title: 'Te amo más', message: 'Te amo más', dataset: teAmoMasDataset, enabled: true,
+      scenes: [
+        { id: 'investigacion', layout: 'analysis-intro', text: ['Hay una discusión que tenemos hace tiempo.', 'Vos decís:', '"Te amo."', 'Y yo, inevitablemente:', '"Te amo más."', 'Así que decidí que ya era hora de determinar si tengo alguna evidencia para semejante afirmación.'], final: 'Con datos.', action: 'COMENZAR INVESTIGACIÓN' },
+        { id: 'hipotesis', layout: 'hypothesis', label: 'HIPÓTESIS', title: 'Marcos ama más.', text: ['Evidencia disponible: {totalMessages} mensajes.', 'Esto debería ser fácil.'], action: 'ANALIZAR' },
+        { id: 'prediccion-te-amo', layout: 'prediction', text: ['Antes de mirar los resultados...', '¿Quién escribió "te amo" más veces?'], interaction: 'predictionTeAmo', action: 'VER RESULTADO' },
+        { id: 'victoria', layout: 'results', metric: 'raw', text: ['Diferencia: {rawDifference}', 'Caso cerrado.', 'Te amo más.'], action: 'CONTINUAR' },
+        { id: 'objecion', layout: 'objection', text: ['Aunque...', 'hay un pequeño problema con mi impecable metodología.', 'Yo también escribí más.', 'Bastante más.', 'Claudia tiene derecho a impugnar el estudio.'], action: 'NORMALIZAR AFECTO' },
+        { id: 'normalizacion', layout: 'normalized', text: ['"te amo" por cada 1.000 mensajes', '...', 'No vamos a hablar de esta estadística.', '¿Desea Claudia cerrar la investigación ahora?'], interaction: 'closeInvestigation' },
+        { id: 'pregunta-incorrecta', layout: 'wrong-question', text: ['Un momento.', 'Estamos midiendo la cosa equivocada.', 'La discusión nunca fue quién dice más veces "te amo".', 'Vos decís:', 'Te amo.', 'Yo digo:', 'Te amo más.', 'El "más" es parte fundamental de la hipótesis.'] },
+        { id: 'evidencia', layout: 'evidence', title: 'Evidencia documental', event: 'masExample', text: ['Hay evidencia abundante de que llevo meses insistiendo con el "más".', 'Eso no demuestra nada.', 'Pero demuestra constancia.'] },
+        { id: 'giro', layout: 'twist', text: ['Pero encontré algo peor.', 'Técnicamente...', 'esto lo empezaste vos.'], event: 'firstMas', after: ['Esto fue antes del primer "te amo" que aparece en el historial.', 'Caso reabierto.'] },
+        { id: 'primer-te-amo', layout: 'prediction', text: ['Ya que llegamos hasta acá...', '¿Quién escribió el primer "te amo" que aparece en nuestro historial?'], interaction: 'predictionFirstTeAmo', action: 'VER RESULTADO', event: 'firstTeAmo', after: ['Punto para mí.', 'No sé exactamente qué punto, pero punto para mí.'] },
+        { id: 'ultimo-indicio', layout: 'evidence', title: 'Y la investigación llega casi hasta hoy.', event: 'finalExample', text: ['Cinco minutos.', 'Ni siquiera pude dejar pasar cinco minutos sin agregarle algo.'] },
+        { id: 'resultados', layout: 'summary', title: 'RESULTADOS DE LA INVESTIGACIÓN', action: 'CONTINUAR', interaction: 'methodology' },
+        { id: 'revision', layout: 'peer-review', title: 'Conclusión científica', text: ['Después de analizar {totalMessages} mensajes y encontrar {totalTeAmoMessages} mensajes con "te amo", no pude demostrar científicamente que te amo más.', 'De hecho, algunas estadísticas son bastante inconvenientes para mi hipótesis.', 'El estudio presenta además un pequeño conflicto de interés:', 'fue diseñado, ejecutado y revisado por Marcos.', 'Nivel de rigor científico: discutible.', 'Pero hay una cosa que los datos sí demuestran.', 'Llevo meses diciéndote que te amo más.'], action: 'VER CONCLUSIÓN DE MARCOS' },
+        { id: 'final', layout: 'final', text: ['No necesito ganar esta discusión.', 'Me alcanza con poder seguir teniéndola contigo durante mucho tiempo.', 'Te amo.'], final: 'Más.' }
+      ] },
     { id: 'reward-06', puzzleId: '06', type: 'FINAL', title: 'TODO_REWARD_06_TITLE', message: 'TODO_REWARD_06_MESSAGE', blocks: [{ type: 'TEXT', message: 'TODO_REWARD_06_FINAL_MESSAGE' }, { type: 'PHOTO', asset: { key: 'rewards/reward-06/final-photo.jpg', alt: 'TODO_REWARD_06_PHOTO_ALT' }, caption: 'TODO_REWARD_06_PHOTO_CAPTION' }, { type: 'VIDEO', asset: { key: 'rewards/reward-06/final-video.mp4', alt: 'TODO_REWARD_06_VIDEO_DESCRIPTION' }, transcript: 'TODO_REWARD_06_VIDEO_TRANSCRIPT' }], enabled: true }
   ]
 };
@@ -51,7 +78,7 @@ export function validateRewardConfig(config = rewardConfig, puzzleIds = ['01', '
     if (reward.type === 'CHOICE' && (!Array.isArray(reward.options) || reward.options.length < 2 || new Set(reward.options.map((option) => option.id)).size !== reward.options.length)) errors.push(`${label} needs at least two uniquely identified options`);
     if (reward.type === 'FINAL') validateBlocks(reward.blocks, label, errors);
     if (reward.type === 'STORY') {
-      if (!Array.isArray(reward.scenes) || reward.scenes.length !== 9) errors.push(`${label} must contain exactly nine story scenes`);
+      if (!Array.isArray(reward.scenes) || reward.scenes.length < 2) errors.push(`${label} must contain story scenes`);
       reward.scenes?.forEach((scene, sceneIndex) => { if (!scene.id) errors.push(`${label}.scenes[${sceneIndex}] needs an id`); if (scene.asset) validateAsset(scene.asset, `${label}.scenes[${sceneIndex}]`, errors); });
     }
   });
