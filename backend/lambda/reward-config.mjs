@@ -71,7 +71,12 @@ export const rewardConfig = {
         { id: 'revision', layout: 'peer-review', title: 'Conclusión científica', text: ['Después de analizar {totalMessages} mensajes y encontrar {totalTeAmoMessages} mensajes con "te amo", no pude demostrar científicamente que te amo más.', 'De hecho, algunas estadísticas son bastante inconvenientes para mi hipótesis.', 'El estudio presenta además un pequeño conflicto de interés:', 'fue diseñado, ejecutado y revisado por Marcos.', 'Nivel de rigor científico: discutible.', 'Pero hay una cosa que los datos sí demuestran.', 'Llevo meses diciéndote que te amo más.'], action: 'VER CONCLUSIÓN DE MARCOS' },
         { id: 'final', layout: 'final', text: ['No necesito ganar esta discusión.', 'Me alcanza con poder seguir teniéndola contigo durante mucho tiempo.', 'Te amo.'], final: 'Más.' }
       ] },
-    { id: 'reward-06', puzzleId: '06', type: 'FINAL', title: 'TODO_REWARD_06_TITLE', message: 'TODO_REWARD_06_MESSAGE', blocks: [{ type: 'TEXT', message: 'TODO_REWARD_06_FINAL_MESSAGE' }, { type: 'PHOTO', asset: { key: 'rewards/reward-06/final-photo.jpg', alt: 'TODO_REWARD_06_PHOTO_ALT' }, caption: 'TODO_REWARD_06_PHOTO_CAPTION' }, { type: 'VIDEO', asset: { key: 'rewards/reward-06/final-video.mp4', alt: 'TODO_REWARD_06_VIDEO_DESCRIPTION' }, transcript: 'TODO_REWARD_06_VIDEO_TRANSCRIPT' }], enabled: true }
+    { id: 'reward-06', puzzleId: '06', type: 'STORY', storyKind: 'final-video', title: 'Video final', message: 'Video final', enabled: true,
+      scenes: [
+        { id: 'intro', layout: 'intro', text: ['Llegaste al último.', 'Seis de seis.', 'Tu expertise excepcional en arreglar numeritos queda oficialmente demostrada.', 'Y esta es la última recompensa.'], action: 'VER VIDEO' },
+        { id: 'video', layout: 'video', asset: { key: 'rewards/reward-06/video.mp4', alt: 'Video de Marcos para Claudia.' } },
+        { id: 'final', layout: 'final', text: ['Y hasta acá llegaron los Sudokus.'], final: 'Volvé.' }
+      ] }
   ]
 };
 

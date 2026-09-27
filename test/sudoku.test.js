@@ -70,7 +70,7 @@ test('offline support caches only the Sudoku shell and never API responses', asy
 test('reward configuration maps every puzzle once and validates all supported placeholders', () => {
   assert.deepEqual(validateRewardConfig(rewardConfig), []);
   assert.deepEqual(rewardConfig.rewards.map((reward) => reward.puzzleId), ['01', '02', '03', '04', '05', '06']);
-  assert.deepEqual(rewardConfig.rewards.map((reward) => reward.type), ['STORY', 'STORY', 'VIDEO', 'STORY', 'STORY', 'FINAL']);
+  assert.deepEqual(rewardConfig.rewards.map((reward) => reward.type), ['STORY', 'STORY', 'VIDEO', 'STORY', 'STORY', 'STORY']);
   assert.equal(rewardConfig.pieces.enabled, true);
 });
 test('Reward #2 is the nine-scene private story associated with Sudoku #2', () => {
@@ -104,8 +104,13 @@ test('Reward #5 derives its audited Te amo más statistics from one dataset', ()
   assert.equal(metrics.teAmoPer1000Marcos, 133 / 19909 * 1000); assert.equal(metrics.teAmoPer1000Claudia, 120 / 17182 * 1000); assert.ok(metrics.teAmoPer1000Claudia > metrics.teAmoPer1000Marcos);
   assert.equal(teAmoMasDataset.historicalEvents.firstMas.date, '28 de febrero de 2026'); assert.equal(teAmoMasDataset.historicalEvents.firstTeAmo.messages.at(-1).author, 'Marcos'); assert.equal(teAmoMasDataset.historicalEvents.finalExample.date, '25 de septiembre de 2026');
 });
+test('Reward #6 is the minimal private final-video story associated with Sudoku #6', async () => {
+  const renderer = await import('../static/sudoku/rewards.js'); const reward = rewardConfig.rewards.find((item) => item.id === 'reward-06'); const video = reward.scenes.find((scene) => scene.id === 'video');
+  assert.equal(reward.puzzleId, '06'); assert.equal(reward.storyKind, 'final-video'); assert.equal(reward.scenes.length, 3); assert.equal(video.asset.key, 'rewards/reward-06/video.mp4');
+  const markup = renderer.storySceneMarkup(reward, { ...video, media: { available: true, url: 'https://example.test/video.mp4', alt: video.asset.alt } }, 1); assert.match(markup, /controls/); assert.match(markup, /playsinline/); assert.match(markup, /video\/mp4/); assert.ok(!markup.includes('autoplay'));
+});
 test('reward validation rejects unsafe mappings, broken voucher books and invalid final blocks', () => {
-  const broken = structuredClone(rewardConfig); broken.rewards[0].puzzleId = '99'; broken.rewards[3].vouchers = []; broken.rewards[5].blocks = [];
+  const broken = structuredClone(rewardConfig); broken.rewards[0].puzzleId = '99'; broken.rewards[3].vouchers = []; broken.pieces.finalReward.blocks = [];
   const errors = validateRewardConfig(broken);
   assert.ok(errors.some((error) => /valid puzzle/.test(error)));
   assert.ok(errors.some((error) => /six vouchers/.test(error)));
@@ -117,7 +122,7 @@ test('reward API keeps private access server-authorized and supports an authenti
   assert.match(lambda, /Completá el Sudoku correspondiente para abrir esta recompensa/);
   assert.match(lambda, /HeadObjectCommand/);
   assert.match(lambda, /getSignedUrl/);
-  assert.match(lambda, /session\.developerMode && \['reward-01', 'reward-02', 'reward-04', 'reward-05'\]\.includes\(reward\.id\)/);
+  assert.match(lambda, /session\.developerMode && \['reward-01', 'reward-02', 'reward-04', 'reward-05', 'reward-06'\]\.includes\(reward\.id\)/);
   assert.ok(!preview.includes('rewards/reward-'));
   assert.match(preview, /TODO_REWARD_01_TITLE/);
 });

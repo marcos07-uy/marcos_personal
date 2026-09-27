@@ -40,8 +40,17 @@ function teAmoMasMarkup(reward, scene, index, state) {
   if (scene.layout === 'summary') feature = `<div class="analysis-summary">${metricCard('Mensajes analizados', format(metrics.totalMessages))}${metricCard('Mensajes explícitos con "te amo"', format(metrics.totalTeAmoMessages))}${metricCard('Más mensajes totales', 'Marcos')}${metricCard('Más mensajes con "te amo"', 'Marcos')}${metricCard('Mayor frecuencia de "te amo"', 'Claudia')}${metricCard('Primer "te amo" en el historial', 'Marcos')}${metricCard('Primer "más" afectivo documentado', 'Claudia')}${metricCard('Quien abusó sistemáticamente del "más"', 'Marcos')}</div>${state.methodology ? methodology(dataset, metrics) : '<button data-story-choice="methodology:open" class="sudoku-text-button">Ver metodología</button>'}`;
   return `<section class="reward-story analysis-story story-layout-${esc(scene.layout || 'standard')}" data-scene="${index}" tabindex="-1" aria-labelledby="story-title-${index}"><header>${scene.label ? `<p class="story-date">${esc(scene.label)}</p>` : ''}${title}</header>${paragraphs(scene.text, 'story-copy', metrics)}${feature}${paragraphs(scene.after, 'story-copy story-after', metrics)}${scene.final ? `<p class="story-final">${esc(scene.final)}</p>` : ''}</section>`;
 }
+function finalVideoMarkup(reward, scene, index) {
+  if (scene.id === 'video') {
+    const video = scene.media?.available && scene.media.url ? `<video class="final-video" controls playsinline preload="metadata" aria-label="${esc(scene.media.alt || 'Video de Marcos para Claudia.')}"><source src="${esc(scene.media.url)}" type="video/mp4">Tu navegador no puede reproducir este video.</video>` : missing();
+    return `<section class="reward-story final-video-story" data-scene="${index}" tabindex="-1" aria-labelledby="story-title-${index}"><h1 id="story-title-${index}" class="visually-hidden">Para vos.</h1><p class="story-date">Para vos.</p>${video}</section>`;
+  }
+  const title = `<h1 id="story-title-${index}" class="visually-hidden">${esc(reward.title)}</h1>`;
+  return `<section class="reward-story story-layout-${esc(scene.layout || 'standard')}" data-scene="${index}" tabindex="-1" aria-labelledby="story-title-${index}">${title}${paragraphs(scene.text, 'story-copy')}${scene.final ? `<p class="story-final">${esc(scene.final)}</p>` : ''}</section>`;
+}
 export function storySceneMarkup(reward, scene, index, state = {}) {
   if (reward.storyKind === 'te-amo-mas') return teAmoMasMarkup(reward, scene, index, state);
+  if (reward.storyKind === 'final-video') return finalVideoMarkup(reward, scene, index);
   const photo = scene.media?.available && scene.media.url ? `<figure class="story-photo"><img src="${esc(scene.media.url)}" alt="${esc(scene.media.alt)}"><figcaption>${esc(scene.caption || '')}</figcaption></figure>` : (scene.hasMedia || scene.asset) ? missing() : '';
   const title = scene.title ? `<h1>${esc(scene.title)}</h1>` : '';
   const date = scene.date ? `<p class="story-date">${esc(scene.date)}</p>` : '';
