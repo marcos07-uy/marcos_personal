@@ -16,13 +16,11 @@ No se cachean rutas `/api`, soluciones ni recompensas privadas. La primera apert
 
 La hora para desbloquear se evalúa exclusivamente en Lambda. Las seis fechas son explícitas: 30 de septiembre; 2, 5, 7 y 10 de octubre; y el desafío final el 16 de octubre. Se interpretan como medianoche en `America/Montevideo` por defecto (configurable con `sudoku_timezone`) y no dependen de completar un desafío anterior.
 
-## Validación final temporal — 27/09/2026
+## Estado de lanzamiento
 
-Para la validación manual completa de Marcos, los seis Sudokus están temporalmente abiertos desde el **26/09/2026 a las 00:00** (`America/Montevideo`). Esta no es la configuración de lanzamiento y debe revertirse al terminar la validación.
+La configuración de lanzamiento está restaurada: los Sudokus 01–06 se abren, respectivamente, el **30/09/2026, 02/10/2026, 05/10/2026, 07/10/2026, 10/10/2026 y 16/10/2026**, todos a las 00:00 en `America/Montevideo`.
 
-Fechas originales que deben restaurarse, en orden 01–06: **30/09/2026, 02/10/2026, 05/10/2026, 07/10/2026, 10/10/2026 y 16/10/2026**, todas a las 00:00.
-
-Al iniciar esta validación se eliminó todo el progreso, estado de recompensas, marcas de reset y mensajes de prueba de los seis Sudokus. Claudia quedó como si nunca hubiera abierto la experiencia.
+Antes del lanzamiento se eliminaron los progresos, recompensas desbloqueadas y mensajes de prueba. Se conserva únicamente una marca técnica de reinicio por Sudoku: evita que una copia local de las pruebas vuelva a sincronizarse y desaparece en la primera sincronización nueva. Para Claudia, la experiencia inicia vacía.
 
 ## Acceso y recompensas
 
@@ -44,9 +42,9 @@ Las recompensas se almacenan en el bucket privado `*-sudoku-rewards`, separado d
 
 Los seis tableros están en `backend/lambda/puzzle-data.mjs`. Cada definición incluye id, tipo, dificultad, fecha, política y recompensa. `npm run generate:sudoku-dev` produce el catálogo local sin soluciones desde esa misma fuente. Las soluciones quedan dentro de Lambda; `test/sudoku.test.js` verifica que cada tablero sea válido y tenga una solución única antes de desplegar.
 
-La clasificación es reproducible con `npm run analyze:sudoku`. El analizador mantiene candidatos y aplica, sin adivinar, singles visibles, singles ocultos, candidatos bloqueados y pares desnudos. Registra cada técnica y un puntaje ponderado. La curva de producción queda verificada así: 01 Fácil (45), 02 Fácil (51), 03 Fácil / Medio (56), 04 Medio (70), 05 Difícil (92) y 06 Experto. El 06 se estanca tras una sola deducción básica: requiere técnicas avanzadas fuera del conjunto actual, por lo que el informe lo marca explícitamente como `advancedRequired`; no se afirma falsamente que el motor lo haya resuelto.
+La clasificación es reproducible con `npm run analyze:sudoku`. El analizador mantiene candidatos y aplica, sin adivinar, singles visibles, singles ocultos, candidatos bloqueados y pares desnudos. Registra cada técnica y un puntaje ponderado. La curva actual privilegia una progresión amable y todos los tableros se resuelven con las técnicas disponibles: 01 Muy fácil (30), 02 Fácil (51), 03 Fácil (49), 04 Fácil (48), 05 Fácil / Medio (56) y 06 Medio (70).
 
-`npm test` comprueba que las seis etiquetas coincidan con ese análisis, que los puntajes 01–05 sean ascendentes, que el 06 requiera técnicas avanzadas, que todos tengan solución única y que la solución privada de Lambda coincida con la solución verificada. El motor comparte candidatos, singles visibles/ocultos y pistas con el cliente. Las pistas sólo describen pasos que el motor encuentra; nivel 4 puede revelar, mientras que Experto está limitado a nivel 1 y nunca revela un número. Antes de iniciar se explica cada restricción. Las herramientas de usabilidad (notas manuales, deshacer, rehacer, borrar, resaltados y conflictos) se mantienen siempre.
+`npm test` comprueba que las seis etiquetas coincidan con el análisis, que todos tengan solución única y que la solución privada de Lambda coincida con la solución verificada. La curva actual es: 01 **Muy fácil** (30), 02 **Fácil** (51), 03 **Fácil** (49), 04 **Fácil** (48), 05 **Fácil / Medio** (56) y 06 **Medio** (70). El motor comparte candidatos, singles visibles/ocultos y pistas con el cliente. Las pistas sólo describen pasos que el motor encuentra; los niveles altos pueden revelar valores cuando la política del Sudoku lo permite. Antes de iniciar se explica cada restricción. Las herramientas de usabilidad (notas manuales, deshacer, rehacer, borrar, resaltados y conflictos) se mantienen siempre.
 
 Para reemplazar un Sudoku, cambiá únicamente su cadena de 81 caracteres y sus metadatos; ejecutá `npm test` antes de desplegar. Para añadir uno, agregá una definición y una recompensa, una fecha explícita y extendé la prueba de fechas. Las soluciones no se deben mover al frontend.
 
@@ -56,7 +54,7 @@ Ejecutá `hugo server -D` para la interfaz; la API requiere `terraform apply` en
 
 Para recorrer los seis Sudokus localmente, iniciá Hugo y abrí `http://localhost:1313/sudoku/?sudokuDev=unlock-all`. Este modo sólo se activa en localhost o una IP privada de la LAN y requiere ese parámetro explícito. Simula la API en `localStorage`, muestra una banda visible de desarrollo y nunca contiene soluciones ni contenido privado. Usá el botón **Reiniciar todos los progresos de prueba** para empezar de cero en ese dispositivo. No existe en el dominio desplegado y no cambia el calendario, autenticación ni validación del backend de producción. Para probar el backend desplegado antes de una fecha, entrá en el dominio con `sudoku_developer_access_code`.
 
-Pruebas: `npm test` verifica reglas, conflictos, candidatos, eliminación automática, unicidad, finalización, pistas, políticas Experto y calendario. Las pruebas de integración API requieren credenciales AWS y se cubren por la validación de Lambda de entradas y revisiones. Limitación conocida: las técnicas avanzadas se califican mediante la curva editorial y coste de búsqueda, no con un catálogo completo de X-Wing/XY-Wing; la arquitectura de `nextLogicalStep` permite agregar técnicas sin cambiar la UI ni persistencia.
+Pruebas: `npm test` verifica reglas, conflictos, candidatos, eliminación automática, unicidad, finalización, pistas, políticas y calendario. Las pruebas de integración API requieren credenciales AWS y se cubren por la validación de Lambda de entradas y revisiones. Limitación conocida: las técnicas avanzadas se califican mediante la curva editorial y coste de búsqueda, no con un catálogo completo de X-Wing/XY-Wing; la arquitectura de `nextLogicalStep` permite agregar técnicas sin cambiar la UI ni persistencia.
 
 ## Próxima sesión: puesta en marcha
 

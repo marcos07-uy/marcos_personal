@@ -7,12 +7,12 @@ import { rewardConfig, teAmoMasDataset, teAmoMasMetrics, validateRewardConfig } 
 
 const toBoard = (text) => Array.from({ length: 9 }, (_, row) => [...text.slice(row * 9, row * 9 + 9)].map(Number));
 const production = [
-  '000260701680070090190004500820100040004602900050003028009300074040050036703018000',
+  '435269781682571493197834562820100040004602900050003028009300074040050036703018000',
   '530070000600195000098000060800060003400803001700020006060000280000419005000080079',
-  '200080300060070084030500209000105408000000000402706000301007040720040060004010003',
-  '000600910002000008108300000000060000400000001000020850060500004280019000340006070',
-  '000000000000003085001020000000507000004000100090000000500000073002010000000040009',
-  '100007090030020008009600500005300900010080002600004000300000010040000007007000300'
+  '245080300060070084030500209000105408000000000402706000301007040720040060004010003',
+  '534678912672000008108300000000060000400000001000020850060500004280019000340006070',
+  '800020700040030026070500801000905602000000000608304000709003060380060040006090007',
+  '000400190008000002902700000000040000600000009000080250040500006820091000760004030'
 ];
 
 test('detects row, column and box conflicts', () => {
@@ -32,23 +32,22 @@ test('all six production puzzles are valid, uniquely solvable and match Lambda p
 });
 test('difficulty analysis matches the six-level progression', () => {
   const reports = production.map((puzzle) => analyzeDifficulty(toBoard(puzzle)));
-  assert.deepEqual(reports.map((report) => report.label), ['Fácil', 'Fácil', 'Fácil / Medio', 'Medio', 'Difícil', 'Experto']);
-  assert.deepEqual(reports.slice(0, 5).map((report) => report.weightedScore), [45, 51, 56, 70, 92]);
-  assert.equal(reports[5].advancedRequired, true);
-  assert.equal(reports[5].solvedLogically, false);
+  assert.deepEqual(reports.map((report) => report.label), ['Fácil', 'Fácil', 'Fácil', 'Fácil', 'Fácil / Medio', 'Medio']);
+  assert.deepEqual(reports.map((report) => report.weightedScore), [30, 51, 49, 48, 56, 70]);
+  assert.ok(reports.every((report) => report.solvedLogically));
 });
 test('logical hints describe an actual derived step and respect levels', () => {
   const grid = toBoard(production[0]); const soft = hintFor(grid, 1); const direct = hintFor(grid, 4);
   assert.match(soft.text, /deducción/i); assert.ok(!/debe ser/.test(soft.text)); assert.match(direct.text, /debe ser/);
 });
-test('production policy progression preserves tools and restricts the sixth expert puzzle', async () => {
+test('production policy progression keeps all six puzzles approachable', async () => {
   const source = await import('node:fs/promises').then((fs) => fs.readFile(new URL('../backend/lambda/puzzle-data.mjs', import.meta.url), 'utf8'));
-  assert.match(source, /\['06','Experto'/); assert.match(source, /solutionErrorCheck: false, hintMaxLevel: 1, maxHints: 1, allowReveal: false/);
+  assert.match(source, /\['01','Muy fácil'/); assert.match(source, /\['06','Medio'/); assert.match(source, /solutionErrorCheck: true, hintMaxLevel: 3, maxHints: 2, allowReveal: false/);
   assert.match(source, /manualNotes: true.*autoRemoveCandidates: true.*duplicateWarnings: true/s);
 });
-test('temporary validation unlock dates are explicit and use the configured timezone', async () => {
+test('production unlock dates are explicit and use the configured timezone', async () => {
   const source = await import('node:fs/promises').then((fs) => fs.readFile(new URL('../backend/lambda/puzzle-data.mjs', import.meta.url), 'utf8'));
-  assert.equal((source.match(/2026-09-26T00:00:00'/g) || []).length, 6);
+  for (const date of ['2026-09-30', '2026-10-02', '2026-10-05', '2026-10-07', '2026-10-10', '2026-10-16']) assert.match(source, new RegExp(`${date}T00:00:00'`));
   assert.equal(zonedTimeToEpoch('2026-09-30T00:00:00', 'America/Montevideo'), Date.parse('2026-09-30T03:00:00.000Z'));
   assert.equal(zonedTimeToEpoch('2026-09-30T00:00:00', 'UTC'), Date.parse('2026-09-30T00:00:00.000Z'));
 });
