@@ -46,9 +46,9 @@ test('production policy progression preserves tools and restricts the sixth expe
   assert.match(source, /\['06','Experto'/); assert.match(source, /solutionErrorCheck: false, hintMaxLevel: 1, maxHints: 1, allowReveal: false/);
   assert.match(source, /manualNotes: true.*autoRemoveCandidates: true.*duplicateWarnings: true/s);
 });
-test('unlock dates are explicit and use the configured timezone', async () => {
+test('temporary validation unlock dates are explicit and use the configured timezone', async () => {
   const source = await import('node:fs/promises').then((fs) => fs.readFile(new URL('../backend/lambda/puzzle-data.mjs', import.meta.url), 'utf8'));
-  for (const day of ['09-30','10-02','10-05','10-07','10-10','10-16']) assert.match(source, new RegExp(`2026-${day}T00:00:00'`));
+  assert.equal((source.match(/2026-09-26T00:00:00'/g) || []).length, 6);
   assert.equal(zonedTimeToEpoch('2026-09-30T00:00:00', 'America/Montevideo'), Date.parse('2026-09-30T03:00:00.000Z'));
   assert.equal(zonedTimeToEpoch('2026-09-30T00:00:00', 'UTC'), Date.parse('2026-09-30T00:00:00.000Z'));
 });

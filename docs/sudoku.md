@@ -16,6 +16,14 @@ No se cachean rutas `/api`, soluciones ni recompensas privadas. La primera apert
 
 La hora para desbloquear se evalúa exclusivamente en Lambda. Las seis fechas son explícitas: 30 de septiembre; 2, 5, 7 y 10 de octubre; y el desafío final el 16 de octubre. Se interpretan como medianoche en `America/Montevideo` por defecto (configurable con `sudoku_timezone`) y no dependen de completar un desafío anterior.
 
+## Validación final temporal — 27/09/2026
+
+Para la validación manual completa de Marcos, los seis Sudokus están temporalmente abiertos desde el **26/09/2026 a las 00:00** (`America/Montevideo`). Esta no es la configuración de lanzamiento y debe revertirse al terminar la validación.
+
+Fechas originales que deben restaurarse, en orden 01–06: **30/09/2026, 02/10/2026, 05/10/2026, 07/10/2026, 10/10/2026 y 16/10/2026**, todas a las 00:00.
+
+Al iniciar esta validación se eliminó todo el progreso, estado de recompensas, marcas de reset y mensajes de prueba de los seis Sudokus. Claudia quedó como si nunca hubiera abierto la experiencia.
+
 ## Acceso y recompensas
 
 La pantalla inicial solicita un código compartido. Lambda verifica ese código, que sólo existe como variable sensible de Terraform, y entrega una sesión HMAC de 14 días. Esto es una protección sencilla para una experiencia de una persona, no un sistema de identidades. El acceso a progreso, validación y recompensas exige esa sesión; Lambda deriva el usuario, Sudoku y recompensa por sí misma.
