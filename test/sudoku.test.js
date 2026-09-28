@@ -45,6 +45,10 @@ test('logical hints describe an actual derived step and respect levels', () => {
   const grid = toBoard(production[0]); const soft = hintFor(grid, 1); const direct = hintFor(grid, 4);
   assert.match(soft.text, /deducción/i); assert.ok(!/debe ser/.test(soft.text)); assert.match(direct.text, /debe ser/);
 });
+test('Sudoku board CSS uses nine explicit equal-height rows', async () => {
+  const css = await import('node:fs/promises').then((fs) => fs.readFile(new URL('../static/css/custom.css', import.meta.url), 'utf8'));
+  assert.match(css, /\.sudoku-board\s*\{[^}]*grid-template-rows:repeat\(9,minmax\(0,1fr\)\)/);
+});
 test('production policy progression keeps all six puzzles approachable', async () => {
   const source = await import('node:fs/promises').then((fs) => fs.readFile(new URL('../backend/lambda/puzzle-data.mjs', import.meta.url), 'utf8'));
   assert.match(source, /\['01','Fácil'/); assert.match(source, /\['02','Accesible'/); assert.match(source, /\['05','Un poco menos accesible'/); assert.match(source, /\['06','Quizás un poco complicado'/); assert.match(source, /solutionErrorCheck: true, hintMaxLevel: 3, maxHints: 2, allowReveal: false/);

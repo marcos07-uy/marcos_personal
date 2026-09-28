@@ -312,7 +312,7 @@
 @media (max-width:380px) { .voucher-full { min-height:0; padding:3px; }.voucher-full-image { max-height:55dvh; }.voucher-download { min-height:52px; } }
 .final-video-story { min-height:58dvh; display:grid; align-content:center; gap:12px; }.final-video-story .story-date { margin-bottom:0 !important; }.final-video { display:block; width:100%; max-height:72dvh; border-radius:15px; background:#081d16; object-fit:contain; }.story-layout-video { min-height:0; }
 .sudoku-tool-help { min-height:2.5em; margin:8px 2px 0 !important; color:#d9e4da !important; font-size:12px; line-height:1.35 !important; }
-.sudoku-board { display:grid !important; gap:1px !important; padding:2px !important; background:#10251e !important; }
+.sudoku-board { display:grid !important; grid-template-rows:repeat(9,minmax(0,1fr)); gap:1px !important; padding:2px !important; background:#10251e !important; }
 .sudoku-cell { border:0 !important; outline:1px solid rgba(35,62,51,.72); }
 .sudoku-cell:nth-child(3n) { border-right:2px solid #10251e !important; }
 .sudoku-cell:nth-child(n+19):nth-child(-n+27),.sudoku-cell:nth-child(n+46):nth-child(-n+54) { border-bottom:2px solid #10251e !important; }
