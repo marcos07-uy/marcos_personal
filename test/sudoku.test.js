@@ -93,6 +93,7 @@ test('Reward #1 is the five-scene private photo story associated with Sudoku #1'
   assert.equal(reward.puzzleId, '01'); assert.equal(reward.scenes.length, 5);
   assert.deepEqual(reward.scenes.filter((scene) => scene.asset).map((scene) => scene.asset.key), ['rewards/reward-01/1era.jpg', 'rewards/reward-01/5dic.jpg']);
   const december = reward.scenes.find((scene) => scene.id === 'sin-vuelta-atras');
+  assert.deepEqual(december.text, ['Me acuerdo de mirarte ese día y darme cuenta que ya no había vuelta atrás.', 'Estaba completamente entregado.', 'Lo cual, considerando que todavía era diciembre, debería haberme preocupado un poco más.']);
   assert.match(renderer.storySceneMarkup(reward, { ...december, hasMedia: true, media: { available: false }, asset: undefined }, 3), /Contenido pendiente/);
   assert.ok(!renderer.storySceneMarkup(reward, { ...december, hasMedia: false, asset: undefined }, 3).includes('ya no había vuelta atrás'));
   assert.match(renderer.storySceneMarkup(reward, { ...december, hasMedia: false, asset: undefined }, 3, { 'stage:sin-vuelta-atras': true }), /ya no había vuelta atrás/);
