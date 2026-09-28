@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { analyzeDifficulty, candidatesFor, conflicts, hintFor, isCompleteAndValid, removePeerCandidate, solve } from '../static/sudoku/sudoku-core.js';
+import { analyzeDifficulty, candidatesFor, conflicts, emptyState, hintFor, isCompleteAndValid, removePeerCandidate, solve } from '../static/sudoku/sudoku-core.js';
 import { zonedTimeToEpoch } from '../backend/lambda/timezone.mjs';
 import { isValidGameState } from '../backend/lambda/validation.mjs';
 import { rewardConfig, teAmoMasDataset, teAmoMasMetrics, validateRewardConfig } from '../backend/lambda/reward-config.mjs';
@@ -25,6 +25,11 @@ test('calculates candidates and removes a peer candidate', () => {
   const grid = toBoard(production[1]); assert.deepEqual(candidatesFor(grid, 0, 2), [1, 2, 4]);
   const changed = removePeerCandidate({ '0:2': [1,2,4], '4:4': [3,4] }, 0, 0, 4);
   assert.deepEqual(changed.notes['0:2'], [1,2]); assert.deepEqual(changed.notes['4:4'], [3,4]);
+});
+test('new progress records identify the initial board they belong to', () => {
+  const initialBoard = toBoard(production[4]);
+  const state = emptyState({ id: '05', initialBoard }, 1);
+  assert.equal(state.initialBoardSignature, production[4]);
 });
 test('all six production puzzles are valid, uniquely solvable and match Lambda private solutions', { timeout: 30000 }, async () => {
   const lambda = await import('node:fs/promises').then((fs) => fs.readFile(new URL('../backend/lambda/index.mjs', import.meta.url), 'utf8'));

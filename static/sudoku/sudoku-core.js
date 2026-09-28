@@ -152,4 +152,4 @@ export function hintFor(board, maxLevel) {
   return { level: 4, signature, text: `En ${position} el valor debe ser ${step.value}.`, reveal: step.value, row: step.row, column: step.column };
 }
 
-export function emptyState(puzzle, now = Date.now()) { return { schemaVersion: 1, puzzleId: puzzle.id, board: cloneBoard(puzzle.initialBoard), notes: {}, elapsedMs: 0, hintsUsed: 0, autoCandidateFills: 0, completedAt: null, history: [], historyIndex: -1, updatedAt: now, revision: 0 }; }
+export function emptyState(puzzle, now = Date.now()) { return { schemaVersion: 1, puzzleId: puzzle.id, initialBoardSignature: puzzle.initialBoard.flat().join(''), board: cloneBoard(puzzle.initialBoard), notes: {}, elapsedMs: 0, hintsUsed: 0, autoCandidateFills: 0, completedAt: null, history: [], historyIndex: -1, updatedAt: now, revision: 0 }; }

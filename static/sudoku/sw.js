@@ -1,4 +1,4 @@
-const CACHE = 'claudia-sudoku-shell-v2';
+const CACHE = 'claudia-sudoku-shell-v3';
 const SHELL = ['/sudoku/', '/sudoku/app.js', '/sudoku/sudoku-core.js'];
 
 self.addEventListener('install', (event) => event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(SHELL)).then(() => self.skipWaiting())));
