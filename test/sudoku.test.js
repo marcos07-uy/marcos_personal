@@ -42,7 +42,7 @@ test('logical hints describe an actual derived step and respect levels', () => {
 });
 test('production policy progression keeps all six puzzles approachable', async () => {
   const source = await import('node:fs/promises').then((fs) => fs.readFile(new URL('../backend/lambda/puzzle-data.mjs', import.meta.url), 'utf8'));
-  assert.match(source, /\['01','Muy fácil'/); assert.match(source, /\['06','Medio'/); assert.match(source, /solutionErrorCheck: true, hintMaxLevel: 3, maxHints: 2, allowReveal: false/);
+  assert.match(source, /\['01','Fácil'/); assert.match(source, /\['02','Accesible'/); assert.match(source, /\['05','Un poco menos accesible'/); assert.match(source, /\['06','Quizás un poco complicado'/); assert.match(source, /solutionErrorCheck: true, hintMaxLevel: 3, maxHints: 2, allowReveal: false/);
   assert.match(source, /manualNotes: true.*autoRemoveCandidates: true.*duplicateWarnings: true/s);
 });
 test('production unlock dates are explicit and use the configured timezone', async () => {
