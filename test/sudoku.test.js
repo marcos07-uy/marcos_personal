@@ -71,9 +71,10 @@ test('the first unlock email introduces the six-Sudoku experience', async () => 
   const lambda = await import('node:fs/promises').then((fs) => fs.readFile(new URL('../backend/lambda/index.mjs', import.meta.url), 'utf8'));
   assert.match(lambda, /puzzle\.id === '01'/);
   assert.match(lambda, /Hoy empieza una pequeña misión/);
-  assert.match(lambda, /La clave para entrar es: olgaYroque/);
+  assert.match(lambda, /Si querés jugar, entrá acá: https:\/\/www\.marcos-lucas\.uy\/sudoku\. La clave para entrar es: olgaYroque/);
   assert.match(lambda, /El primero se habilita hoy a las 18:00\./);
   assert.match(lambda, /Cuando tengas ganas, tu próximo desafío ya está listo/);
+  assert.match(lambda, /Se desbloqueó un nuevo Sudoku[\s\S]*Si querés jugar, entrá acá/);
   assert.match(lambda, /NOTIFICATION_EMAILS/);
 });
 test('rejects malformed or oversized client game state before persistence', () => {
