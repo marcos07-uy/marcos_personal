@@ -8,4 +8,6 @@ export const devRewards = [
   { id: 'reward-05', puzzleId: '05', type: 'VOUCHER', title: 'TODO_REWARD_05_TITLE', message: 'TODO_REWARD_05_MESSAGE', validFrom: '2026-10-21', expiresAt: null, conditions: 'TODO_REWARD_05_CONDITIONS' },
   { id: 'reward-06', puzzleId: '06', type: 'FINAL', title: 'TODO_REWARD_06_TITLE', message: 'TODO_REWARD_06_MESSAGE', blocks: [{ type: 'TEXT', message: 'TODO_REWARD_06_FINAL_MESSAGE' }, { type: 'PHOTO', message: '', caption: 'TODO_REWARD_06_PHOTO_CAPTION', media: unavailable }, { type: 'VIDEO', message: '', media: unavailable, transcript: 'TODO_REWARD_06_VIDEO_TRANSCRIPT' }] }
 ];
-export const devMetaReward = { enabled: true, pieces: 6, totalPieces: 6, unlocked: true, reward: { id: 'meta-final-06', type: 'FINAL', title: 'TODO_REWARD_META_TITLE', message: 'TODO_REWARD_META_MESSAGE', blocks: [{ type: 'TEXT', message: 'TODO_REWARD_META_FINAL_MESSAGE' }, { type: 'PHOTO', message: '', media: unavailable }] } };
+// Reward #6 is the final experience. Do not expose the unfinished meta reward
+// in developer preview either.
+export const devMetaReward = { enabled: false, pieces: 0, totalPieces: 6, unlocked: false };

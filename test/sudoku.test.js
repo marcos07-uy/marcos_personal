@@ -93,7 +93,7 @@ test('reward configuration maps every puzzle once and validates all supported pl
   assert.deepEqual(validateRewardConfig(rewardConfig), []);
   assert.deepEqual(rewardConfig.rewards.map((reward) => reward.puzzleId), ['01', '02', '03', '04', '05', '06']);
   assert.deepEqual(rewardConfig.rewards.map((reward) => reward.type), ['STORY', 'STORY', 'VIDEO', 'STORY', 'STORY', 'STORY']);
-  assert.equal(rewardConfig.pieces.enabled, true);
+  assert.equal(rewardConfig.pieces.enabled, false);
 });
 test('Reward #2 is the nine-scene private story associated with Sudoku #2', () => {
   const story = rewardConfig.rewards.find((reward) => reward.id === 'reward-02');
@@ -132,8 +132,8 @@ test('Reward #6 is the minimal private final-video story associated with Sudoku 
   assert.equal(reward.puzzleId, '06'); assert.equal(reward.storyKind, 'final-video'); assert.equal(reward.scenes.length, 3); assert.equal(video.asset.key, 'rewards/reward-06/video.mp4');
   const markup = renderer.storySceneMarkup(reward, { ...video, media: { available: true, url: 'https://example.test/video.mp4', alt: video.asset.alt } }, 1); assert.match(markup, /controls/); assert.match(markup, /playsinline/); assert.match(markup, /video\/mp4/); assert.ok(!markup.includes('autoplay'));
 });
-test('reward validation rejects unsafe mappings, broken voucher books and invalid final blocks', () => {
-  const broken = structuredClone(rewardConfig); broken.rewards[0].puzzleId = '99'; broken.rewards[3].vouchers = []; broken.pieces.finalReward.blocks = [];
+test('reward validation rejects unsafe mappings, broken voucher books and invalid enabled final blocks', () => {
+  const broken = structuredClone(rewardConfig); broken.rewards[0].puzzleId = '99'; broken.rewards[3].vouchers = []; broken.pieces.enabled = true; broken.pieces.finalReward.blocks = [];
   const errors = validateRewardConfig(broken);
   assert.ok(errors.some((error) => /valid puzzle/.test(error)));
   assert.ok(errors.some((error) => /six vouchers/.test(error)));
