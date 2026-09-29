@@ -48,6 +48,7 @@ test('logical hints describe an actual derived step and respect levels', () => {
 test('Sudoku board CSS uses nine explicit equal-height rows', async () => {
   const css = await import('node:fs/promises').then((fs) => fs.readFile(new URL('../static/css/custom.css', import.meta.url), 'utf8'));
   assert.match(css, /\.sudoku-board\s*\{[^}]*grid-template-rows:repeat\(9,minmax\(0,1fr\)\)/);
+  assert.match(css, /::after\s*\{ content:""; position:absolute; z-index:2/);
 });
 test('production policy progression keeps all six puzzles approachable', async () => {
   const source = await import('node:fs/promises').then((fs) => fs.readFile(new URL('../backend/lambda/puzzle-data.mjs', import.meta.url), 'utf8'));
