@@ -14,11 +14,11 @@ Tras abrir Sudoku con internet, un service worker guarda la pantalla y los módu
 
 No se cachean rutas `/api`, soluciones ni recompensas privadas. La primera apertura y el primer inicio de sesión requieren conexión. Para máxima confiabilidad durante el vuelo, Claudia debe abrir la página y el Sudoku que va a jugar antes de salir; mantener la pestaña abierta evita depender de que iOS o Android descarte la pestaña por falta de memoria.
 
-La hora para desbloquear se evalúa exclusivamente en Lambda. El Sudoku 01 se abre el 30 de septiembre a las 19:30; los demás se abren a medianoche los días 3, 7, 10, 15 y 18 de octubre. Se interpretan en `America/Montevideo` por defecto (configurable con `sudoku_timezone`) y no dependen de completar un desafío anterior. El email del Sudoku 01 se envía ese 30 de septiembre a las 17:00; los restantes coinciden con la apertura.
+La hora para desbloquear se evalúa exclusivamente en Lambda. El Sudoku 01 se abre el 30 de septiembre a las 18:00; los demás se abren a medianoche los días 3, 7, 10, 15 y 18 de octubre. Se interpretan en `America/Montevideo` por defecto (configurable con `sudoku_timezone`) y no dependen de completar un desafío anterior. El email del Sudoku 01 se envía ese 30 de septiembre a las 15:00; los restantes coinciden con la apertura.
 
 ## Estado de lanzamiento
 
-La configuración de lanzamiento está: el Sudoku 01 abre el **30/09/2026 a las 19:30**; los Sudokus 02–06 abren el **03/10, 07/10, 10/10, 15/10 y 18/10/2026**, respectivamente, todos a las 00:00 en `America/Montevideo`. El email previo del Sudoku 01 se envía el 30/09 a las 17:00.
+La configuración de lanzamiento está: el Sudoku 01 abre el **30/09/2026 a las 18:00**; los Sudokus 02–06 abren el **03/10, 07/10, 10/10, 15/10 y 18/10/2026**, respectivamente, todos a las 00:00 en `America/Montevideo`. El email previo del Sudoku 01 se envía el 30/09 a las 15:00.
 
 Antes del lanzamiento se eliminaron los progresos, recompensas desbloqueadas y mensajes de prueba. Se conserva únicamente una marca técnica de reinicio por Sudoku: evita que una copia local de las pruebas vuelva a sincronizarse y desaparece en la primera sincronización nueva. Para Claudia, la experiencia inicia vacía.
 

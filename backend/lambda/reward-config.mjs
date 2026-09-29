@@ -1,4 +1,4 @@
-export const REWARD_TYPES = new Set(['PHOTO', 'TEXT', 'AUDIO', 'VIDEO', 'SONG', 'VOUCHER', 'CHOICE', 'FINAL', 'STORY']);
+export const REWARD_TYPES = new Set(['PHOTO', 'TEXT', 'AUDIO', 'VIDEO', 'SONG', 'VOUCHER', 'CHOICE', 'FINAL', 'STORY', 'QUIZ']);
 
 export const teAmoMasDataset = {
   endDate: '2026-09-25', messages: { marcos: 19909, claudia: 17182 }, teAmoMessages: { marcos: 133, claudia: 120 },
@@ -46,7 +46,7 @@ export const rewardConfig = {
         { id: 'final', layout: 'final', text: ['En unos días te toca irte lejos por un tiempo.', 'Hice esto porque quería encontrar una forma de acompañarte un poquito durante el viaje.', 'Así que escondí algunos pedacitos de nosotros entre números.', 'No sustituye tenerte cerca, pero por ahora tendrá que servir.'], final: 'Te amo. Más.' }
       ]
     },
-    { id: 'reward-03', puzzleId: '03', type: 'VIDEO', title: 'TODO_REWARD_03_TITLE', message: 'TODO_REWARD_03_MESSAGE', asset: { key: 'rewards/reward-03/video.mp4', alt: 'TODO_REWARD_03_VIDEO_DESCRIPTION' }, poster: { key: 'rewards/reward-03/poster.jpg', alt: 'TODO_REWARD_03_POSTER_ALT' }, transcript: 'TODO_REWARD_03_TRANSCRIPT', enabled: true },
+    { id: 'reward-03', puzzleId: '03', type: 'QUIZ', quizId: 'marcos', title: 'Prueba', message: '¿Qué tanto conocés a Marcos?', enabled: true },
     { id: 'reward-04', puzzleId: '04', type: 'STORY', storyKind: 'voucher-book', title: 'Talonario de vales', message: 'Talonario de vales', enabled: true,
       vouchers: [
         { id: 'cafe', number: 1, title: 'Un café en una cafetería fantástica', asset: { key: 'rewards/reward-04/vale-01-cafe.png', alt: 'Vale 1 de 6: un café en una cafetería fantástica.' } },
@@ -95,6 +95,7 @@ export function validateRewardConfig(config = rewardConfig, puzzleIds = ['01', '
     if (!puzzleIds.includes(reward.puzzleId) || mapped.has(reward.puzzleId)) errors.push(`${label} must map once to a valid puzzle`); mapped.add(reward.puzzleId);
     if (!REWARD_TYPES.has(reward.type)) errors.push(`${label} has an unsupported type`);
     if (!reward.title || !reward.message) errors.push(`${label} needs title and message`);
+    if (reward.type === 'QUIZ' && reward.quizId !== 'marcos') errors.push(`${label} needs a supported quizId`);
     if (['PHOTO', 'AUDIO', 'VIDEO'].includes(reward.type)) validateAsset(reward.asset, label, errors);
     if (reward.type === 'SONG' && (!reward.song || !isUrl(reward.song.url))) errors.push(`${label} needs a valid song URL`);
     if (reward.type === 'CHOICE' && (!Array.isArray(reward.options) || reward.options.length < 2 || new Set(reward.options.map((option) => option.id)).size !== reward.options.length)) errors.push(`${label} needs at least two uniquely identified options`);

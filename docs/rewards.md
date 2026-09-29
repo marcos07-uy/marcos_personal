@@ -19,6 +19,7 @@ Editá `backend/lambda/reward-config.mjs`. Buscá `TODO_REWARD` para encontrar t
 - `CHOICE`: `options`, `permanent` y `showAllChoices`.
 - `FINAL`: `blocks`, que pueden ser texto, foto, audio, video, canción o vale.
 - `STORY`: una secuencia de escenas privadas. Cada escena puede incluir texto, mensajes, momentos y una foto privada; el navegador sólo recibe la URL firmada de cada foto cuando la recompensa está autorizada.
+- `QUIZ`: una experiencia interactiva cliente con estado efímero; conserva el desbloqueo genérico de la recompensa, sin persistir respuestas individuales.
 
 Ejemplo ficticio de cada tipo:
 
@@ -26,6 +27,7 @@ Ejemplo ficticio de cada tipo:
 { id: 'reward-xx', puzzleId: '01', type: 'PHOTO', title: 'Título', message: 'Mensaje', asset: { key: 'rewards/reward-xx/photo.jpg', alt: 'Descripción' } }
 { id: 'reward-xx', puzzleId: '02', type: 'AUDIO', title: 'Título', message: 'Mensaje', asset: { key: 'rewards/reward-xx/audio.m4a', alt: 'Audio personal' }, transcript: 'Transcripción' }
 { id: 'reward-xx', puzzleId: '03', type: 'VIDEO', title: 'Título', message: 'Mensaje', asset: { key: 'rewards/reward-xx/video.mp4', alt: 'Descripción del video' }, poster: { key: 'rewards/reward-xx/poster.jpg', alt: 'Poster' } }
+{ id: 'reward-xx', puzzleId: '03', type: 'QUIZ', quizId: 'marcos', title: 'Prueba', message: '¿Qué tanto conocés a Marcos?' }
 { id: 'reward-xx', puzzleId: '04', type: 'SONG', title: 'Título', message: 'Mensaje', song: { title: 'Tema', artist: 'Artista', url: 'https://ejemplo.com' } }
 { id: 'reward-xx', puzzleId: '05', type: 'VOUCHER', title: 'Vale', message: 'Descripción', validFrom: '2026-10-21', expiresAt: null, conditions: 'Condiciones' }
 { id: 'reward-xx', puzzleId: '06', type: 'CHOICE', title: 'Elegí', message: 'Descripción', permanent: true, options: [{ id: 'a', label: 'Opción A' }, { id: 'b', label: 'Opción B' }] }
@@ -60,8 +62,6 @@ rewards/reward-02/audio.m4a
 rewards/reward-02/19enero.jpg
 rewards/reward-02/8mayo.jpg
 rewards/reward-02/20septiembre.jpg
-rewards/reward-03/video.mp4
-rewards/reward-03/poster.jpg
 rewards/reward-06/video.mp4
 ```
 
@@ -87,7 +87,7 @@ Para ver los siete renderizadores de placeholder sin resolver Sudokus, sólo en 
 /sudoku/?sudokuDev=reward-preview
 ```
 
-El fixture local `static/sudoku/dev-rewards.js` sólo contiene `TODO_REWARD` y nunca usa la API ni claves privadas. Para revisar una recompensa real con media privada, entrá al sitio desplegado usando el código de desarrollador y abrí `/sudoku/?sudokuDev=reward-preview`: sólo esa sesión autenticada puede previsualizar Reward #2 sin completarla. Las sesiones normales siguen exigiendo la finalización de su Sudoku correspondiente.
+El fixture local `static/sudoku/dev-rewards.js` sólo contiene contenido ficticio y nunca usa la API ni claves privadas. Para revisar una recompensa real, entrá al sitio desplegado usando el código de desarrollador y abrí `/sudoku/?sudokuDev=reward-preview`: esa sesión puede previsualizar Reward #2 y Reward #3 sin completarlas. Las sesiones normales siguen exigiendo la finalización de su Sudoku correspondiente.
 
 Si el enlace de preview abre el catálogo normal, primero elegí **Cerrar sesión en este teléfono** e iniciá nuevamente con el código de desarrollador. Un token regular de Claudia no se transforma en sesión de preview por la URL.
 
