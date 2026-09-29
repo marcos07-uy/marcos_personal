@@ -16,6 +16,7 @@ const ACCESS_CODE = process.env.ACCESS_CODE;
 const DEVELOPER_ACCESS_CODE = process.env.DEVELOPER_ACCESS_CODE;
 const ADMIN_ACCESS_CODE = process.env.ADMIN_ACCESS_CODE;
 const NOTIFICATION_EMAIL = process.env.NOTIFICATION_EMAIL;
+const NOTIFICATION_EMAILS = (process.env.NOTIFICATION_EMAILS || NOTIFICATION_EMAIL || '').split(',').map((email) => email.trim()).filter(Boolean);
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const RESEND_FROM_EMAIL = process.env.RESEND_FROM_EMAIL;
 const SESSION_SECRET = process.env.SESSION_SECRET;
@@ -43,12 +44,12 @@ async function progress(userId, puzzleId) { return (await db.send(new GetCommand
 const resetRecordId = (puzzleId) => `RESET#${puzzleId}`;
 async function resetState(userId, puzzleId) { return progress(userId, resetRecordId(puzzleId)); }
 async function sendUnlockEmail(puzzle, test = false) {
-  if (!NOTIFICATION_EMAIL || !RESEND_API_KEY || !RESEND_FROM_EMAIL) throw new Error('Falta configurar Resend para las notificaciones.');
+  if (!NOTIFICATION_EMAILS.length || !RESEND_API_KEY || !RESEND_FROM_EMAIL) throw new Error('Falta configurar Resend para las notificaciones.');
   const subject = test ? `[Prueba] Un nuevo Sudoku te está esperando` : 'Un nuevo Sudoku te está esperando';
   const message = puzzle.id === '01'
     ? `Hola, Claudia.\n\nHoy empieza una pequeña misión, durante el viaje vas a ir encontrando seis Sudokus que prepare especialmente. Cada uno guarda algo esperándote del otro lado a modo de recompensa. No te sientas obligada a hacerlo, pero se que te gustan los sudokus y si tenes tiempo para quemar quizas los queres hacer, deberian ser relataivamente faciles para tu nivel de expertise, o al menos eso espero...\n\nPodés resolverlos a tu ritmo. Si en algún momento te quedás sin conexión, podés seguir jugando mientras no cierres esta pestaña; cuando vuelva internet, el progreso se guarda solo.\n\nEl primero se habilita hoy a las 19:30.\n\nBuen viaje.`
     : `Hola, Claudia.\n\nSe desbloqueó un nuevo Sudoku para que puedas poner a prueba tu ingenio, divertirte un rato y acercarte a una nueva recompensa.\n\nCuando tengas ganas, tu próximo desafío ya está listo.`;
-  const response = await fetch('https://api.resend.com/emails', { method: 'POST', headers: { authorization: `Bearer ${RESEND_API_KEY}`, 'content-type': 'application/json' }, body: JSON.stringify({ from: RESEND_FROM_EMAIL, to: [NOTIFICATION_EMAIL], subject, text: test ? `Esta es una prueba de notificación.\n\n${message}` : message, tags: [{ name: 'sudoku', value: puzzle.id }, { name: 'kind', value: test ? 'test' : 'unlock' }] }) });
+  const response = await fetch('https://api.resend.com/emails', { method: 'POST', headers: { authorization: `Bearer ${RESEND_API_KEY}`, 'content-type': 'application/json' }, body: JSON.stringify({ from: RESEND_FROM_EMAIL, to: NOTIFICATION_EMAILS, subject, text: test ? `Esta es una prueba de notificación.\n\n${message}` : message, tags: [{ name: 'sudoku', value: puzzle.id }, { name: 'kind', value: test ? 'test' : 'unlock' }] }) });
   if (!response.ok) throw new Error(`Resend rejected the email (${response.status}).`);
 }
 const WALL_USER = 'shared-wall';
