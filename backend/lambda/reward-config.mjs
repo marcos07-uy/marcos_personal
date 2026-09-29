@@ -15,7 +15,9 @@ export const teAmoMasMetrics = (dataset = teAmoMasDataset) => ({ totalMessages: 
 // Never place private media under static/ or content/.
 export const rewardConfig = {
   pieces: {
-    enabled: true,
+    // Reward #6 is the intentional conclusion of the six-Sudoku experience.
+    // Keep the unfinished meta reward disabled until it has real final content.
+    enabled: false,
     finalReward: {
       id: 'meta-final-06', type: 'FINAL', title: 'TODO_REWARD_META_TITLE', message: 'TODO_REWARD_META_MESSAGE',
       blocks: [{ type: 'TEXT', message: 'TODO_REWARD_META_FINAL_MESSAGE' }, { type: 'PHOTO', asset: { key: 'rewards/meta-final/final.jpg', alt: 'TODO_REWARD_META_FINAL_ALT' }, caption: 'TODO_REWARD_META_FINAL_CAPTION' }]

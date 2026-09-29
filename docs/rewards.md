@@ -62,8 +62,7 @@ rewards/reward-02/8mayo.jpg
 rewards/reward-02/20septiembre.jpg
 rewards/reward-03/video.mp4
 rewards/reward-03/poster.jpg
-rewards/reward-06/final-photo.jpg
-rewards/meta-final/final.jpg
+rewards/reward-06/video.mp4
 ```
 
 Nunca pongas estos archivos en `static/`. Para subir uno, obtené el bucket con Terraform y ejecutá:
@@ -102,4 +101,4 @@ git commit -m "Configure Sudoku rewards"
 git push origin main
 ```
 
-La meta-recompensa se controla con `rewardConfig.pieces.enabled`. Cuando está activa, muestra `n / 6 piezas encontradas`; el detalle final sólo se entrega después de las seis finalizaciones.
+La meta-recompensa está desactivada (`rewardConfig.pieces.enabled: false`). La experiencia concluye deliberadamente con el video de la Recompensa #6; no se muestra contador de piezas ni una recompensa adicional tras completar los seis Sudokus.
