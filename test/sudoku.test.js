@@ -72,6 +72,7 @@ test('the first unlock email introduces the six-Sudoku experience', async () => 
   assert.match(lambda, /Hoy empieza una pequeña misión/);
   assert.match(lambda, /El primero se habilita hoy a las 19:30\./);
   assert.match(lambda, /Cuando tengas ganas, tu próximo desafío ya está listo/);
+  assert.match(lambda, /NOTIFICATION_EMAILS/);
 });
 test('rejects malformed or oversized client game state before persistence', () => {
   const policy = { maxHints: 2 };
@@ -178,6 +179,7 @@ test('administrator controls and the shared wall remain server-authorized', asyn
   assert.match(terraform, /dynamodb:Query/);
   assert.match(terraform, /sudoku_admin_access_code/);
   assert.match(terraform, /RESEND_API_KEY/);
+  assert.match(terraform, /NOTIFICATION_EMAILS/);
   assert.match(app, /Muro de mensajes/);
   assert.match(app, /Un espacio compartido durante este desafío/);
   assert.match(app, /embedded-wall/);

@@ -85,6 +85,11 @@ variable "sudoku_notification_email" {
   type        = string
   default     = "marcos.s.lucas@gmail.com"
 }
+variable "sudoku_notification_additional_emails" {
+  description = "Additional addresses that receive every Sudoku unlock notification."
+  type        = list(string)
+  default     = ["claudia.grassi83@gmail.com"]
+}
 variable "resend_api_key" {
   description = "Resend sending API key restricted to marcos-lucas.uy."
   type        = string
