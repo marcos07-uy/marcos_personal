@@ -65,6 +65,13 @@ test('production unlock dates are explicit and use the configured timezone', asy
   assert.equal(zonedTimeToEpoch('2026-09-30T00:00:00', 'America/Montevideo'), Date.parse('2026-09-30T03:00:00.000Z'));
   assert.equal(zonedTimeToEpoch('2026-09-30T00:00:00', 'UTC'), Date.parse('2026-09-30T00:00:00.000Z'));
 });
+test('the first unlock email introduces the six-Sudoku experience', async () => {
+  const lambda = await import('node:fs/promises').then((fs) => fs.readFile(new URL('../backend/lambda/index.mjs', import.meta.url), 'utf8'));
+  assert.match(lambda, /puzzle\.id === '01'/);
+  assert.match(lambda, /Hoy empieza una pequeña misión/);
+  assert.match(lambda, /El primero se habilita hoy a las 19:30\./);
+  assert.match(lambda, /Cuando tengas ganas, tu próximo desafío ya está listo/);
+});
 test('rejects malformed or oversized client game state before persistence', () => {
   const policy = { maxHints: 2 };
   const valid = { schemaVersion: 1, puzzleId: '01', board: toBoard(production[0]), notes: {}, elapsedMs: 1200, hintsUsed: 0, autoCandidateFills: 0, history: [], historyIndex: -1 };
