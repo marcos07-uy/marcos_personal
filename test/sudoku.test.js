@@ -180,5 +180,6 @@ test('administrator controls and the shared wall remain server-authorized', asyn
   assert.match(app, /Muro de mensajes/);
   assert.match(app, /Un espacio compartido durante este desafío/);
   assert.match(app, /embedded-wall/);
+  assert.match(app, /querySelector\('\.sudoku-sync'\)\?\.insertAdjacentHTML\('afterend'/);
   assert.match(app, /Progreso de Claudia/);
 });
