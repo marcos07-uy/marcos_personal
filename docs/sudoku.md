@@ -14,11 +14,11 @@ Tras abrir Sudoku con internet, un service worker guarda la pantalla y los módu
 
 No se cachean rutas `/api`, soluciones ni recompensas privadas. La primera apertura y el primer inicio de sesión requieren conexión. Para máxima confiabilidad durante el vuelo, Claudia debe abrir la página y el Sudoku que va a jugar antes de salir; mantener la pestaña abierta evita depender de que iOS o Android descarte la pestaña por falta de memoria.
 
-La hora para desbloquear se evalúa exclusivamente en Lambda. Las seis fechas son explícitas: 30 de septiembre; 2, 5, 7 y 10 de octubre; y el desafío final el 16 de octubre. Se interpretan como medianoche en `America/Montevideo` por defecto (configurable con `sudoku_timezone`) y no dependen de completar un desafío anterior.
+La hora para desbloquear se evalúa exclusivamente en Lambda. Las seis fechas son explícitas: 30 de septiembre; 3, 7, 10 y 15 de octubre; y el desafío final el 18 de octubre. Se interpretan como medianoche en `America/Montevideo` por defecto (configurable con `sudoku_timezone`) y no dependen de completar un desafío anterior.
 
 ## Estado de lanzamiento
 
-La configuración de lanzamiento está restaurada: los Sudokus 01–06 se abren, respectivamente, el **30/09/2026, 02/10/2026, 05/10/2026, 07/10/2026, 10/10/2026 y 16/10/2026**, todos a las 00:00 en `America/Montevideo`.
+La configuración de lanzamiento está: los Sudokus 01–06 se abren, respectivamente, el **30/09/2026, 03/10/2026, 07/10/2026, 10/10/2026, 15/10/2026 y 18/10/2026**, todos a las 00:00 en `America/Montevideo`.
 
 Antes del lanzamiento se eliminaron los progresos, recompensas desbloqueadas y mensajes de prueba. Se conserva únicamente una marca técnica de reinicio por Sudoku: evita que una copia local de las pruebas vuelva a sincronizarse y desaparece en la primera sincronización nueva. Para Claudia, la experiencia inicia vacía.
 

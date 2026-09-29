@@ -56,7 +56,9 @@ test('production policy progression keeps all six puzzles approachable', async (
 });
 test('production unlock dates are explicit and use the configured timezone', async () => {
   const source = await import('node:fs/promises').then((fs) => fs.readFile(new URL('../backend/lambda/puzzle-data.mjs', import.meta.url), 'utf8'));
-  for (const date of ['2026-09-30', '2026-10-02', '2026-10-05', '2026-10-07', '2026-10-10', '2026-10-16']) assert.match(source, new RegExp(`${date}T00:00:00'`));
+  for (const date of ['2026-09-30', '2026-10-03', '2026-10-07', '2026-10-10', '2026-10-15', '2026-10-18']) assert.match(source, new RegExp(`${date}T00:00:00'`));
+  const notifications = await import('node:fs/promises').then((fs) => fs.readFile(new URL('../infra/terraform/aws/sudoku-notifications.tf', import.meta.url), 'utf8'));
+  for (const schedule of ['30 9', '3 10', '7 10', '10 10', '15 10', '18 10']) assert.match(notifications, new RegExp(`cron\\(0 3 ${schedule.replace(' ', ' ')} \\? 2026\\)`));
   assert.equal(zonedTimeToEpoch('2026-09-30T00:00:00', 'America/Montevideo'), Date.parse('2026-09-30T03:00:00.000Z'));
   assert.equal(zonedTimeToEpoch('2026-09-30T00:00:00', 'UTC'), Date.parse('2026-09-30T00:00:00.000Z'));
 });
@@ -93,6 +95,7 @@ test('Reward #1 is the five-scene private photo story associated with Sudoku #1'
   assert.equal(reward.puzzleId, '01'); assert.equal(reward.scenes.length, 5);
   assert.deepEqual(reward.scenes.filter((scene) => scene.asset).map((scene) => scene.asset.key), ['rewards/reward-01/1era.jpg', 'rewards/reward-01/5dic.jpg']);
   const december = reward.scenes.find((scene) => scene.id === 'sin-vuelta-atras');
+  assert.deepEqual(december.text, ['Me acuerdo de mirarte ese día y darme cuenta que ya no había vuelta atrás.', 'Estaba completamente entregado.', 'Lo cual, considerando que todavía era diciembre, debería haberme preocupado un poco más.']);
   assert.match(renderer.storySceneMarkup(reward, { ...december, hasMedia: true, media: { available: false }, asset: undefined }, 3), /Contenido pendiente/);
   assert.ok(!renderer.storySceneMarkup(reward, { ...december, hasMedia: false, asset: undefined }, 3).includes('ya no había vuelta atrás'));
   assert.match(renderer.storySceneMarkup(reward, { ...december, hasMedia: false, asset: undefined }, 3, { 'stage:sin-vuelta-atras': true }), /ya no había vuelta atrás/);
