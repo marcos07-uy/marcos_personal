@@ -56,9 +56,12 @@ test('production policy progression keeps all six puzzles approachable', async (
 });
 test('production unlock dates are explicit and use the configured timezone', async () => {
   const source = await import('node:fs/promises').then((fs) => fs.readFile(new URL('../backend/lambda/puzzle-data.mjs', import.meta.url), 'utf8'));
-  for (const date of ['2026-09-30', '2026-10-03', '2026-10-07', '2026-10-10', '2026-10-15', '2026-10-18']) assert.match(source, new RegExp(`${date}T00:00:00'`));
+  assert.match(source, /2026-09-30T19:30:00'/);
+  for (const date of ['2026-10-03', '2026-10-07', '2026-10-10', '2026-10-15', '2026-10-18']) assert.match(source, new RegExp(`${date}T00:00:00'`));
   const notifications = await import('node:fs/promises').then((fs) => fs.readFile(new URL('../infra/terraform/aws/sudoku-notifications.tf', import.meta.url), 'utf8'));
-  for (const schedule of ['30 9', '3 10', '7 10', '10 10', '15 10', '18 10']) assert.match(notifications, new RegExp(`cron\\(0 3 ${schedule.replace(' ', ' ')} \\? 2026\\)`));
+  assert.match(notifications, /cron\(0 20 30 9 \? 2026\)/);
+  for (const schedule of ['3 10', '7 10', '10 10', '15 10', '18 10']) assert.match(notifications, new RegExp(`cron\\(0 3 ${schedule} \\? 2026\\)`));
+  assert.equal(zonedTimeToEpoch('2026-09-30T19:30:00', 'America/Montevideo'), Date.parse('2026-09-30T22:30:00.000Z'));
   assert.equal(zonedTimeToEpoch('2026-09-30T00:00:00', 'America/Montevideo'), Date.parse('2026-09-30T03:00:00.000Z'));
   assert.equal(zonedTimeToEpoch('2026-09-30T00:00:00', 'UTC'), Date.parse('2026-09-30T00:00:00.000Z'));
 });

@@ -1,6 +1,6 @@
 locals {
   sudoku_unlock_notifications = {
-    "01" = "cron(0 3 30 9 ? 2026)"
+    "01" = "cron(0 20 30 9 ? 2026)"
     "02" = "cron(0 3 3 10 ? 2026)"
     "03" = "cron(0 3 7 10 ? 2026)"
     "04" = "cron(0 3 10 10 ? 2026)"
