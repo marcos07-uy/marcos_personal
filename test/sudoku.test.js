@@ -4,6 +4,7 @@ import { analyzeDifficulty, candidatesFor, conflicts, emptyState, hintFor, isCom
 import { zonedTimeToEpoch } from '../backend/lambda/timezone.mjs';
 import { isValidGameState } from '../backend/lambda/validation.mjs';
 import { rewardConfig, teAmoMasDataset, teAmoMasMetrics, validateRewardConfig } from '../backend/lambda/reward-config.mjs';
+import { percentageForScore, quizOutcome, quizQuestions, realScore, royalProgression } from '../static/sudoku/quiz.js';
 
 const toBoard = (text) => Array.from({ length: 9 }, (_, row) => [...text.slice(row * 9, row * 9 + 9)].map(Number));
 const production = [
@@ -57,12 +58,12 @@ test('production policy progression keeps all six puzzles approachable', async (
 });
 test('production unlock dates are explicit and use the configured timezone', async () => {
   const source = await import('node:fs/promises').then((fs) => fs.readFile(new URL('../backend/lambda/puzzle-data.mjs', import.meta.url), 'utf8'));
-  assert.match(source, /2026-09-30T19:30:00'/);
+  assert.match(source, /2026-09-30T18:00:00'/);
   for (const date of ['2026-10-03', '2026-10-07', '2026-10-10', '2026-10-15', '2026-10-18']) assert.match(source, new RegExp(`${date}T00:00:00'`));
   const notifications = await import('node:fs/promises').then((fs) => fs.readFile(new URL('../infra/terraform/aws/sudoku-notifications.tf', import.meta.url), 'utf8'));
-  assert.match(notifications, /cron\(0 20 30 9 \? 2026\)/);
+  assert.match(notifications, /cron\(0 18 30 9 \? 2026\)/);
   for (const schedule of ['3 10', '7 10', '10 10', '15 10', '18 10']) assert.match(notifications, new RegExp(`cron\\(0 3 ${schedule} \\? 2026\\)`));
-  assert.equal(zonedTimeToEpoch('2026-09-30T19:30:00', 'America/Montevideo'), Date.parse('2026-09-30T22:30:00.000Z'));
+  assert.equal(zonedTimeToEpoch('2026-09-30T18:00:00', 'America/Montevideo'), Date.parse('2026-09-30T21:00:00.000Z'));
   assert.equal(zonedTimeToEpoch('2026-09-30T00:00:00', 'America/Montevideo'), Date.parse('2026-09-30T03:00:00.000Z'));
   assert.equal(zonedTimeToEpoch('2026-09-30T00:00:00', 'UTC'), Date.parse('2026-09-30T00:00:00.000Z'));
 });
@@ -70,7 +71,8 @@ test('the first unlock email introduces the six-Sudoku experience', async () => 
   const lambda = await import('node:fs/promises').then((fs) => fs.readFile(new URL('../backend/lambda/index.mjs', import.meta.url), 'utf8'));
   assert.match(lambda, /puzzle\.id === '01'/);
   assert.match(lambda, /Hoy empieza una pequeña misión/);
-  assert.match(lambda, /El primero se habilita hoy a las 19:30\./);
+  assert.match(lambda, /La clave para entrar es: olgaYroque/);
+  assert.match(lambda, /El primero se habilita hoy a las 18:00\./);
   assert.match(lambda, /Cuando tengas ganas, tu próximo desafío ya está listo/);
   assert.match(lambda, /NOTIFICATION_EMAILS/);
 });
@@ -92,8 +94,32 @@ test('offline support caches only the Sudoku shell and never API responses', asy
 test('reward configuration maps every puzzle once and validates all supported placeholders', () => {
   assert.deepEqual(validateRewardConfig(rewardConfig), []);
   assert.deepEqual(rewardConfig.rewards.map((reward) => reward.puzzleId), ['01', '02', '03', '04', '05', '06']);
-  assert.deepEqual(rewardConfig.rewards.map((reward) => reward.type), ['STORY', 'STORY', 'VIDEO', 'STORY', 'STORY', 'STORY']);
+  assert.deepEqual(rewardConfig.rewards.map((reward) => reward.type), ['STORY', 'STORY', 'QUIZ', 'STORY', 'STORY', 'STORY']);
   assert.equal(rewardConfig.pieces.enabled, false);
+});
+test('Reward #3 is the ten-question Marcos quiz with real scoring and an official correction', async () => {
+  const reward = rewardConfig.rewards.find((item) => item.id === 'reward-03');
+  assert.deepEqual({ puzzleId: reward.puzzleId, type: reward.type, quizId: reward.quizId }, { puzzleId: '03', type: 'QUIZ', quizId: 'marcos' });
+  assert.equal(quizQuestions.length, 10);
+  assert.deepEqual(quizQuestions.map((question) => question.correct), Array(10).fill(3));
+  assert.equal(quizQuestions[6].allCorrect, true);
+  assert.equal(quizOutcome(6, 0).realPoint, 1); assert.equal(quizOutcome(6, 3).realPoint, 1);
+  assert.equal(quizOutcome(1, 0).realPoint, 0); assert.equal(quizOutcome(1, 1).realPoint, 0); assert.equal(quizOutcome(1, 2).realPoint, 0); assert.equal(quizOutcome(1, 3).realPoint, 1);
+  assert.equal(quizOutcome(2, 0).realPoint, 0); assert.equal(realScore([3, 3, 0]), 2);
+  assert.equal(quizOutcome(7, 3).realPoint, 1); assert.equal(quizOutcome(9, 3).realPoint, 1);
+  assert.equal(percentageForScore(0), 0); assert.equal(percentageForScore(7), 70); assert.equal(realScore(Array(10).fill(3)), 10);
+  for (const score of [0, 5, 10]) { const values = royalProgression(percentageForScore(score)); assert.equal(values.at(-1), 100); assert.ok(values.every((value, index) => index === 0 || value > values[index - 1])); }
+  const app = await import('node:fs/promises').then((fs) => fs.readFile(new URL('../static/sudoku/app.js', import.meta.url), 'utf8'));
+  const lambda = await import('node:fs/promises').then((fs) => fs.readFile(new URL('../backend/lambda/index.mjs', import.meta.url), 'utf8'));
+  assert.match(app, /ACEPTO EL RESULTADO/); assert.doesNotMatch(app, /RECHAZAR EL RESULTADO|VOLVER A CALCULAR/);
+  assert.match(app, /prefers-reduced-motion/); assert.match(app, /aria-pressed/); assert.match(lambda, /'reward-03'/);
+  const css = await import('node:fs/promises').then((fs) => fs.readFile(new URL('../static/css/custom.css', import.meta.url), 'utf8'));
+  assert.match(css, /\.quiz-answer \{[^}]*min-height:64px[^}]*overflow-wrap:anywhere/s); assert.match(css, /safe-area-inset-bottom/);
+});
+test('Reward #3 uses no prohibited decorative symbols', async () => {
+  const quiz = await import('node:fs/promises').then((fs) => fs.readFile(new URL('../static/sudoku/quiz.js', import.meta.url), 'utf8'));
+  assert.doesNotMatch(quiz, /[✗❌⚠👑❤️💕🎉]/u);
+  assert.match(quiz, /✓ Correcto/);
 });
 test('Reward #2 is the nine-scene private story associated with Sudoku #2', () => {
   const story = rewardConfig.rewards.find((reward) => reward.id === 'reward-02');
@@ -133,9 +159,10 @@ test('Reward #6 is the minimal private final-video story associated with Sudoku 
   const markup = renderer.storySceneMarkup(reward, { ...video, media: { available: true, url: 'https://example.test/video.mp4', alt: video.asset.alt } }, 1); assert.match(markup, /controls/); assert.match(markup, /playsinline/); assert.match(markup, /video\/mp4/); assert.ok(!markup.includes('autoplay'));
 });
 test('reward validation rejects unsafe mappings, broken voucher books and invalid enabled final blocks', () => {
-  const broken = structuredClone(rewardConfig); broken.rewards[0].puzzleId = '99'; broken.rewards[3].vouchers = []; broken.pieces.enabled = true; broken.pieces.finalReward.blocks = [];
+  const broken = structuredClone(rewardConfig); broken.rewards[0].puzzleId = '99'; broken.rewards[2].quizId = 'unsupported'; broken.rewards[3].vouchers = []; broken.pieces.enabled = true; broken.pieces.finalReward.blocks = [];
   const errors = validateRewardConfig(broken);
   assert.ok(errors.some((error) => /valid puzzle/.test(error)));
+  assert.ok(errors.some((error) => /supported quizId/.test(error)));
   assert.ok(errors.some((error) => /six vouchers/.test(error)));
   assert.ok(errors.some((error) => /at least one block/.test(error)));
 });
@@ -145,7 +172,7 @@ test('reward API keeps private access server-authorized and supports an authenti
   assert.match(lambda, /Completá el Sudoku correspondiente para abrir esta recompensa/);
   assert.match(lambda, /HeadObjectCommand/);
   assert.match(lambda, /getSignedUrl/);
-  assert.match(lambda, /session\.developerMode && \['reward-01', 'reward-02', 'reward-04', 'reward-05', 'reward-06'\]\.includes\(reward\.id\)/);
+  assert.match(lambda, /session\.developerMode && \['reward-01', 'reward-02', 'reward-03', 'reward-04', 'reward-05', 'reward-06'\]\.includes\(reward\.id\)/);
   assert.ok(!preview.includes('rewards/reward-'));
   assert.match(preview, /TODO_REWARD_01_TITLE/);
 });
