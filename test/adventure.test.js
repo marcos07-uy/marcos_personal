@@ -29,6 +29,7 @@ test('private adventure implementation uses signed HttpOnly sessions, CSRF and s
   const source = await import('node:fs/promises').then((fs) => fs.readFile(new URL('../backend/lambda/index.mjs', import.meta.url), 'utf8'));
   const terraform = await import('node:fs/promises').then((fs) => fs.readFile(new URL('../infra/terraform/aws/sudoku.tf', import.meta.url), 'utf8'));
   assert.match(source, /HttpOnly; Secure; SameSite=Strict/);
+  assert.match(source, /adventure_csrf=\$\{csrf\}; Path=\//);
   assert.match(source, /x-csrf-token/);
   assert.match(source, /passwordMatches/);
   assert.match(source, /adventure#\$\{userId\}/);

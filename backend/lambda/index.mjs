@@ -74,9 +74,9 @@ async function handleAdventure(event) {
     const account = ADVENTURE_USERS[username];
     if (!account || !passwordMatches(password, account.passwordHash)) { const attempts = (throttle?.windowStartedAt && current - throttle.windowStartedAt < 15 * 60 * 1000 ? throttle.attempts : 0) + 1; await db.send(new PutCommand({ TableName: TABLE, Item: { userId: throttleKey, puzzleId: 'RATE', attempts, windowStartedAt: attempts === 1 ? current : throttle?.windowStartedAt, blockedUntil: attempts >= 5 ? current + 15 * 60 * 1000 : 0, ttl: Math.floor(current / 1000) + 3600 } })); return adventureJson(401, { error: 'Usuario o contraseña incorrectos.' }); }
     const csrf = crypto.randomBytes(24).toString('base64url'); const exp = Math.floor(current / 1000) + 60 * 60 * 8; const token = adventureToken({ sub: username, csrf, exp });
-    return adventureJson(200, { user: { id: username, name: account.name } }, [`adventure_session=${token}; Path=/api/adventure; Max-Age=28800; HttpOnly; Secure; SameSite=Strict`, `adventure_csrf=${csrf}; Path=/api/adventure; Max-Age=28800; Secure; SameSite=Strict`]);
+    return adventureJson(200, { user: { id: username, name: account.name } }, [`adventure_session=${token}; Path=/api/adventure; Max-Age=28800; HttpOnly; Secure; SameSite=Strict`, `adventure_csrf=${csrf}; Path=/; Max-Age=28800; Secure; SameSite=Strict`]);
   }
-  if (path === '/logout' && method === 'POST') return adventureJson(200, { ok: true }, ['adventure_session=; Path=/api/adventure; Max-Age=0; HttpOnly; Secure; SameSite=Strict', 'adventure_csrf=; Path=/api/adventure; Max-Age=0; Secure; SameSite=Strict']);
+  if (path === '/logout' && method === 'POST') return adventureJson(200, { ok: true }, ['adventure_session=; Path=/api/adventure; Max-Age=0; HttpOnly; Secure; SameSite=Strict', 'adventure_csrf=; Path=/; Max-Age=0; Secure; SameSite=Strict']);
   const session = adventureSession(event); if (!session) return adventureJson(401, { error: 'Tu sesión terminó. Volvé a entrar.' });
   if (!['GET', 'HEAD'].includes(method) && (event.headers?.['x-csrf-token'] !== session.csrf || cookieValue(event, 'adventure_csrf') !== session.csrf)) return adventureJson(403, { error: 'No se pudo validar la solicitud. Recargá la página.' });
   const account = ADVENTURE_USERS[session.sub]; if (!account) return adventureJson(403, { error: 'Esta cuenta no tiene acceso.' });
