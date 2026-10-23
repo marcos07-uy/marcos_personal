@@ -110,3 +110,16 @@ variable "sudoku_timezone" {
   type        = string
   default     = "America/Montevideo"
 }
+
+variable "adventure_users_json" {
+  description = "JSON object keyed by lowercase user id (marcos, claudia), containing display name and an scrypt passwordHash. Never place plaintext passwords here."
+  type        = string
+  sensitive   = true
+  default     = "{}"
+}
+variable "adventure_session_secret" {
+  description = "Long random secret used only to sign private adventure cookie sessions."
+  type        = string
+  sensitive   = true
+  default     = null
+}

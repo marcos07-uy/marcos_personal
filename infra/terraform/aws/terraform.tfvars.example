@@ -16,6 +16,10 @@ sudoku_notification_additional_emails = ["claudia.grassi83@gmail.com"]
 resend_api_key = "re_replace-with-a-domain-scoped-sending-key"
 resend_from_email = "Sudoku para Claudia <sudoku@marcos-lucas.uy>"
 sudoku_session_secret = "replace-with-a-long-random-secret"
+# Generate each value locally (the command is documented in docs/nuestra-aventura.md).
+# The JSON has scrypt hashes only; do not commit or paste plaintext passwords.
+adventure_users_json = "{\"marcos\":{\"name\":\"Marcos\",\"passwordHash\":\"scrypt$16384$8$1$REPLACE_SALT$REPLACE_HASH\"},\"claudia\":{\"name\":\"Claudia\",\"passwordHash\":\"scrypt$16384$8$1$REPLACE_SALT$REPLACE_HASH\"}}"
+adventure_session_secret = "replace-with-a-different-long-random-secret"
 
 tags = {
   Environment = "prod"
