@@ -25,9 +25,11 @@ test('logistical corridors are explicit rather than inferred from visit duration
 });
 test('private adventure implementation uses signed HttpOnly sessions, CSRF and server-side profiles', async () => {
   const source = await import('node:fs/promises').then((fs) => fs.readFile(new URL('../backend/lambda/index.mjs', import.meta.url), 'utf8'));
+  const terraform = await import('node:fs/promises').then((fs) => fs.readFile(new URL('../infra/terraform/aws/sudoku.tf', import.meta.url), 'utf8'));
   assert.match(source, /HttpOnly; Secure; SameSite=Strict/);
   assert.match(source, /x-csrf-token/);
   assert.match(source, /passwordMatches/);
   assert.match(source, /adventure#\$\{userId\}/);
   assert.match(source, /attempts >= 5/);
+  assert.match(terraform, /ANY \/api\/adventure\/\{proxy\+\}/);
 });

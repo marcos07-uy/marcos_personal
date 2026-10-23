@@ -91,6 +91,16 @@ resource "aws_apigatewayv2_route" "sudoku_root" {
   route_key = "ANY /api/sudoku"
   target    = "integrations/${aws_apigatewayv2_integration.sudoku.id}"
 }
+resource "aws_apigatewayv2_route" "adventure_api" {
+  api_id    = aws_apigatewayv2_api.sudoku.id
+  route_key = "ANY /api/adventure/{proxy+}"
+  target    = "integrations/${aws_apigatewayv2_integration.sudoku.id}"
+}
+resource "aws_apigatewayv2_route" "adventure_api_root" {
+  api_id    = aws_apigatewayv2_api.sudoku.id
+  route_key = "ANY /api/adventure"
+  target    = "integrations/${aws_apigatewayv2_integration.sudoku.id}"
+}
 resource "aws_apigatewayv2_route" "adventure_page" {
   api_id    = aws_apigatewayv2_api.sudoku.id
   route_key = "ANY /nuestra-aventura/{proxy+}"
