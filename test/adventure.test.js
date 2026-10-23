@@ -18,6 +18,8 @@ test('catalog covers every required territory and keeps stable destination ids',
   assert.ok(destinations.length >= 50);
   assert.equal(new Set(destinations.map((destination) => destination.id)).size, destinations.length);
   assert.ok(destinations.every((destination) => destination.source && Array.isArray(destination.tags) && destination.editorial >= 1 && destination.editorial <= 5));
+  assert.ok(destinations.every((destination) => Number.isFinite(destination.lat) && destination.lat >= -90 && destination.lat <= 90 && Number.isFinite(destination.lng) && destination.lng >= -180 && destination.lng <= 180));
+  for (const id of ['london', 'bath', 'oxford', 'york', 'lake-district', 'seven-sisters', 'edinburgh', 'glencoe', 'fort-william', 'isle-of-skye', 'loch-ness', 'inverness', 'conwy', 'eryri', 'cardiff', 'belfast', 'giants-causeway', 'dublin', 'galway', 'cliffs-of-moher', 'connemara', 'killarney', 'dingle']) assert.ok(destinations.some((destination) => destination.id === id), id);
 });
 test('logistical corridors are explicit rather than inferred from visit duration', () => {
   assert.ok(corridors.length >= 4);
@@ -32,5 +34,17 @@ test('private adventure implementation uses signed HttpOnly sessions, CSRF and s
   assert.match(source, /adventure#\$\{userId\}/);
   assert.match(source, /attempts >= 5/);
   assert.match(source, /const \[, n, r, p, salt, hash\] = parts;/);
+  assert.match(source, /leaflet\.markercluster/);
   assert.match(terraform, /ANY \/api\/adventure\/\{proxy\+\}/);
+});
+test('real map renderer uses Leaflet, OSM tiles and marker clustering rather than calculated CSS positions', async () => {
+  const map = await import('node:fs/promises').then((fs) => fs.readFile(new URL('../static/adventure/map.js', import.meta.url), 'utf8'));
+  const app = await import('node:fs/promises').then((fs) => fs.readFile(new URL('../static/adventure/app.js', import.meta.url), 'utf8'));
+  assert.match(map, /L\.map/);
+  assert.match(map, /tile\.openstreetmap\.org/);
+  assert.match(map, /markerClusterGroup/);
+  assert.match(map, /fitBounds/);
+  assert.match(map, /invalidateSize/);
+  assert.match(app, /renderAdventureMap/);
+  assert.doesNotMatch(app, /\(\(x\.lng\+11\)\/11\)\*100/);
 });

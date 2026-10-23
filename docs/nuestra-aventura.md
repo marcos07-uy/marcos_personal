@@ -20,6 +20,16 @@ La sesión dura ocho horas y se firma con `adventure_session_secret`. Es una coo
 
 Antes de aplicar Terraform, definí valores reales en un `terraform.tfvars` ignorado. El ejemplo contiene sólo marcadores. Rotar `adventure_session_secret` invalida las sesiones actuales.
 
+## Mapa geográfico
+
+La vista **Lugares para descubrir** usa Leaflet 1.9.4, Leaflet.markercluster 1.4.1 y las teselas estándar de OpenStreetMap. Los scripts y estilos se cargan una sola vez desde sus CDN oficiales en `layouts/adventure/baseof.html`; no se agregó infraestructura, token ni API paga. El mapa se inicializa sólo al abrir esa sección, se destruye al salir, observa cambios de tamaño con `ResizeObserver` e invoca `invalidateSize()` para evitar mapas recortados.
+
+Los puntos vienen directamente de `lat` y `lng` WGS84 del catálogo: no se convierten a porcentajes visuales. La validación automática rechaza latitudes fuera de `-90..90`, longitudes fuera de `-180..180` y coordenadas no numéricas. Los filtros actualizan en conjunto tarjetas, clusters y encuadre con `fitBounds()`. Un click en marcador abre la misma ficha seleccionada por un click de postal; las postales seleccionadas devuelven el foco al lugar en el mapa.
+
+Leaflet.markercluster agrupa puntos en zoom general y abre progresivamente los grupos al acercarse. Los pines tienen iconos según categoría (ciudad, castillo, montaña, lago, costa, trekking, pueblo o cultura) y un símbolo adicional para la preferencia guardada. La ficha incluye lugares relacionados por corredor geográfico o cercanía, diferenciando explícitamente esa relación de un itinerario de un día.
+
+OpenStreetMap exige atribución visible y prohíbe precargar/descargar masivamente teselas; el mapa usa el URL HTTPS oficial y la atribución estándar visible. Es adecuado para este uso privado de bajo volumen. Si el sitio pasa a tener tráfico alto, se debe elegir un proveedor de teselas con capacidad y términos acordes antes de aumentar el uso.
+
 ## Catálogo y contenido
 
 El catálogo inicial tiene más de 50 lugares y cubre todas las regiones solicitadas en Inglaterra, Gales, Escocia, Irlanda del Norte y República de Irlanda. Cada entrada tiene identificador estable, región, país, coordenadas, etiquetas, interés editorial, datos operativos con estado explícito cuando están pendientes y fuente/revisión. Las coordenadas se señalan como provenientes de OpenStreetMap/Nominatim; antes de reservas conviene contrastar horarios, senderos, estacionamientos, ferries y accesos con el organismo turístico/operador correspondiente.
@@ -48,4 +58,4 @@ terraform -chdir=infra/terraform/aws init -backend=false
 terraform -chdir=infra/terraform/aws validate
 ```
 
-No se despliega automáticamente desde este cambio. El workflow existente desplegará al hacer push a `main`, por lo que revisar el plan de Terraform y configurar los dos secretos de aventura antes de ese paso. Costos nuevos: ninguno; la aventura agrega lecturas/escrituras PAY_PER_REQUEST a DynamoDB y ejecución Lambda/API Gateway dentro de servicios ya existentes. Puede haber costos marginales por tráfico. Un mapa Leaflet/MapLibre con teselas externas no fue agregado: se usa un mapa ilustrado por privacidad/costo y porque no se debe asumir una política de teselas sin confirmarla. Para un mapa cartográfico real, elegir primero un proveedor compatible con su política de uso y atribución.
+No se despliega automáticamente desde este cambio. El workflow existente desplegará al hacer push a `main`, por lo que revisar el plan de Terraform y configurar los dos secretos de aventura antes de ese paso. Costos nuevos: ninguno; la aventura agrega lecturas/escrituras PAY_PER_REQUEST a DynamoDB y ejecución Lambda/API Gateway dentro de servicios ya existentes. Puede haber costos marginales por tráfico. Leaflet y Leaflet.markercluster son dependencias gratuitas; OpenStreetMap Standard no factura, pero su servicio comunitario tiene límites de uso y no ofrece SLA.

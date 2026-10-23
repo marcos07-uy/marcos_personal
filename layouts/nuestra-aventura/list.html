@@ -1,0 +1,5 @@
+{{ define "header" }}{{ end }}
+{{ define "main" }}
+<main id="adventure-app" class="adventure-app"><noscript>Para planear juntos necesitamos JavaScript habilitado.</noscript></main>
+<script type="module" src="{{ printf "%s?v=%d" ("adventure/app.js" | relURL) now.Unix }}"></script>
+{{ end }}
