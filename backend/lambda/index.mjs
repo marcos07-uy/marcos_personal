@@ -56,7 +56,7 @@ function passwordMatches(password, encoded) {
   // Stored form: scrypt$N$r$p$saltBase64$hashBase64. The plaintext never enters Terraform or the browser.
   const parts = typeof encoded === 'string' ? encoded.split('$') : [];
   if (parts.length !== 6 || parts[0] !== 'scrypt' || password.length > 256) return false;
-  const [,, n, r, p, salt, hash] = parts;
+  const [, n, r, p, salt, hash] = parts;
   try { const actual = crypto.scryptSync(password, Buffer.from(salt, 'base64'), Buffer.from(hash, 'base64').length, { N: Number(n), r: Number(r), p: Number(p), maxmem: 128 * 1024 * 1024 }); const expected = Buffer.from(hash, 'base64'); return actual.length === expected.length && crypto.timingSafeEqual(actual, expected); } catch { return false; }
 }
 async function adventureRecord(userId) { return (await db.send(new GetCommand({ TableName: TABLE, Key: { userId: `adventure#${userId}`, puzzleId: 'PROFILE' } }))).Item || null; }

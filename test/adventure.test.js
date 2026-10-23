@@ -31,5 +31,6 @@ test('private adventure implementation uses signed HttpOnly sessions, CSRF and s
   assert.match(source, /passwordMatches/);
   assert.match(source, /adventure#\$\{userId\}/);
   assert.match(source, /attempts >= 5/);
+  assert.match(source, /const \[, n, r, p, salt, hash\] = parts;/);
   assert.match(terraform, /ANY \/api\/adventure\/\{proxy\+\}/);
 });
