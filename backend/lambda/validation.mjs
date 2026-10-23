@@ -30,3 +30,19 @@ export function isValidGameState(state, puzzleId, policy) {
 export function parseBody(body) {
   try { return JSON.parse(body || '{}'); } catch { return null; }
 }
+
+const ANSWERS = new Set(['landscape', 'activities', 'walks', 'experience', 'evenings', 'transfers', 'keep', 'pace']);
+const MAX_TEXT = 180;
+
+export function isValidAdventureProfile(value) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+  if (!value.answers || typeof value.answers !== 'object' || Array.isArray(value.answers)) return false;
+  if (!Object.keys(value.answers).every((key) => ANSWERS.has(key) && typeof value.answers[key] === 'string' && value.answers[key].length <= 80)) return false;
+  if (!Array.isArray(value.dreams) || value.dreams.length > 3 || !value.dreams.every((item) => typeof item === 'string' && item.trim().length <= MAX_TEXT)) return false;
+  return value.completed === undefined || typeof value.completed === 'boolean';
+}
+
+export function isValidAdventureFavorite(value) {
+  return value && typeof value === 'object' && typeof value.destinationId === 'string' && /^[a-z0-9-]{2,80}$/.test(value.destinationId)
+    && ['love', 'want', 'review', 'low'].includes(value.status);
+}

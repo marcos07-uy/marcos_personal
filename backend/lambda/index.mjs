@@ -4,7 +4,7 @@ import { DynamoDBDocumentClient, DeleteCommand, GetCommand, PutCommand, QueryCom
 import { S3Client, GetObjectCommand, HeadObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { zonedTimeToEpoch } from './timezone.mjs';
-import { isBoard, isValidGameState, parseBody } from './validation.mjs';
+import { isBoard, isValidGameState, isValidAdventureFavorite, isValidAdventureProfile, parseBody } from './validation.mjs';
 import { rawPuzzles } from './puzzle-data.mjs';
 import { rewardById, rewardByPuzzleId, rewardConfig, validateRewardConfig } from './reward-config.mjs';
 
@@ -21,6 +21,8 @@ const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const RESEND_FROM_EMAIL = process.env.RESEND_FROM_EMAIL;
 const SESSION_SECRET = process.env.SESSION_SECRET;
 const TZ = process.env.UNLOCK_TIMEZONE || 'America/Montevideo';
+const ADVENTURE_USERS = JSON.parse(process.env.ADVENTURE_USERS_JSON || '{}');
+const ADVENTURE_SESSION_SECRET = process.env.ADVENTURE_SESSION_SECRET || SESSION_SECRET;
 const board = (text) => Array.from({ length: 9 }, (_, r) => [...text.slice(r * 9, r * 9 + 9)].map(Number));
 // These solutions remain inside Lambda. Their uniqueness is verified in the automated test suite,
 // rather than recalculated during every cold start.
@@ -39,6 +41,55 @@ const now = () => Date.now(); const safe = (p) => (({ solution, ...rest }) => re
 const json = (statusCode, body) => ({ statusCode, headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store', 'access-control-allow-origin': process.env.ALLOWED_ORIGIN || '*', 'access-control-allow-headers': 'content-type,authorization', 'access-control-allow-methods': 'GET,POST,OPTIONS' }, body: JSON.stringify(body) });
 function sign(payload) { const raw = Buffer.from(JSON.stringify(payload)).toString('base64url'); return `${raw}.${crypto.createHmac('sha256', SESSION_SECRET).update(raw).digest('base64url')}`; }
 function user(event) { const token = event.headers?.authorization?.replace(/^Bearer\s+/i, ''); if (!token) return null; const [raw, mac] = token.split('.'); const expected = crypto.createHmac('sha256', SESSION_SECRET).update(raw).digest('base64url'); if (!mac || mac.length !== expected.length || !crypto.timingSafeEqual(Buffer.from(mac), Buffer.from(expected))) return null; try { const claim = JSON.parse(Buffer.from(raw, 'base64url')); return claim.exp > Math.floor(now()/1000) ? { id: claim.sub, developerMode: claim.developerMode === true, admin: claim.admin === true } : null; } catch { return null; } }
+const adventureKey = (id) => `ADVENTURE#${id}`;
+const cookieValue = (event, name) => (event.cookies || []).join('; ').split(';').map((part) => part.trim()).find((part) => part.startsWith(`${name}=`))?.slice(name.length + 1) || '';
+function adventureToken(payload) { const raw = Buffer.from(JSON.stringify(payload)).toString('base64url'); return `${raw}.${crypto.createHmac('sha256', ADVENTURE_SESSION_SECRET).update(raw).digest('base64url')}`; }
+function adventureSession(event) {
+  const token = cookieValue(event, 'adventure_session'); const [raw, mac] = token.split('.');
+  if (!raw || !mac) return null;
+  const expected = crypto.createHmac('sha256', ADVENTURE_SESSION_SECRET).update(raw).digest('base64url');
+  if (mac.length !== expected.length || !crypto.timingSafeEqual(Buffer.from(mac), Buffer.from(expected))) return null;
+  try { const claim = JSON.parse(Buffer.from(raw, 'base64url')); return claim.exp > Math.floor(now() / 1000) && typeof claim.sub === 'string' ? claim : null; } catch { return null; }
+}
+function adventureJson(statusCode, body, cookies = []) { return { statusCode, headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store', 'access-control-allow-origin': process.env.ALLOWED_ORIGIN || '*', 'access-control-allow-credentials': 'true', 'access-control-allow-headers': 'content-type,x-csrf-token', 'access-control-allow-methods': 'GET,POST,PUT,OPTIONS', vary: 'Cookie' }, cookies, body: JSON.stringify(body) }; }
+function passwordMatches(password, encoded) {
+  // Stored form: scrypt$N$r$p$saltBase64$hashBase64. The plaintext never enters Terraform or the browser.
+  const parts = typeof encoded === 'string' ? encoded.split('$') : [];
+  if (parts.length !== 6 || parts[0] !== 'scrypt' || password.length > 256) return false;
+  const [,, n, r, p, salt, hash] = parts;
+  try { const actual = crypto.scryptSync(password, Buffer.from(salt, 'base64'), Buffer.from(hash, 'base64').length, { N: Number(n), r: Number(r), p: Number(p), maxmem: 128 * 1024 * 1024 }); const expected = Buffer.from(hash, 'base64'); return actual.length === expected.length && crypto.timingSafeEqual(actual, expected); } catch { return false; }
+}
+async function adventureRecord(userId) { return (await db.send(new GetCommand({ TableName: TABLE, Key: { userId: `adventure#${userId}`, puzzleId: 'PROFILE' } }))).Item || null; }
+async function saveAdventureRecord(userId, changes) { const current = await adventureRecord(userId); const record = { userId: `adventure#${userId}`, puzzleId: 'PROFILE', profile: current?.profile || { answers: {}, dreams: [], completed: false }, favorites: current?.favorites || {}, updatedAt: now(), revision: (current?.revision || 0) + 1, ...changes }; await db.send(new PutCommand({ TableName: TABLE, Item: record })); return record; }
+function safeAdventureRecord(record) { return { profile: record?.profile || { answers: {}, dreams: [], completed: false }, favorites: record?.favorites || {}, updatedAt: record?.updatedAt || null, revision: record?.revision || 0 }; }
+async function handleAdventure(event) {
+  const path = event.rawPath.replace(/^\/api\/adventure/, '') || '/'; const method = event.requestContext?.http?.method || 'GET';
+  if (method === 'OPTIONS') return adventureJson(204, {});
+  if (path === '/session' && method === 'POST') {
+    const input = parseBody(event.body); const username = input?.username?.trim().toLowerCase(); const password = input?.password;
+    if (typeof username !== 'string' || typeof password !== 'string' || username.length > 64) return adventureJson(400, { error: 'Solicitud inválida.' });
+    const throttleKey = `adventure-auth#${crypto.createHash('sha256').update(`${event.requestContext?.http?.sourceIp || 'unknown'}:${username}`).digest('hex')}`;
+    const throttle = await progress(throttleKey, 'RATE'); const current = now();
+    if (throttle?.blockedUntil > current) return adventureJson(429, { error: 'Esperá unos minutos antes de volver a intentar.' });
+    const account = ADVENTURE_USERS[username];
+    if (!account || !passwordMatches(password, account.passwordHash)) { const attempts = (throttle?.windowStartedAt && current - throttle.windowStartedAt < 15 * 60 * 1000 ? throttle.attempts : 0) + 1; await db.send(new PutCommand({ TableName: TABLE, Item: { userId: throttleKey, puzzleId: 'RATE', attempts, windowStartedAt: attempts === 1 ? current : throttle?.windowStartedAt, blockedUntil: attempts >= 5 ? current + 15 * 60 * 1000 : 0, ttl: Math.floor(current / 1000) + 3600 } })); return adventureJson(401, { error: 'Usuario o contraseña incorrectos.' }); }
+    const csrf = crypto.randomBytes(24).toString('base64url'); const exp = Math.floor(current / 1000) + 60 * 60 * 8; const token = adventureToken({ sub: username, csrf, exp });
+    return adventureJson(200, { user: { id: username, name: account.name } }, [`adventure_session=${token}; Path=/api/adventure; Max-Age=28800; HttpOnly; Secure; SameSite=Strict`, `adventure_csrf=${csrf}; Path=/api/adventure; Max-Age=28800; Secure; SameSite=Strict`]);
+  }
+  if (path === '/logout' && method === 'POST') return adventureJson(200, { ok: true }, ['adventure_session=; Path=/api/adventure; Max-Age=0; HttpOnly; Secure; SameSite=Strict', 'adventure_csrf=; Path=/api/adventure; Max-Age=0; Secure; SameSite=Strict']);
+  const session = adventureSession(event); if (!session) return adventureJson(401, { error: 'Tu sesión terminó. Volvé a entrar.' });
+  if (!['GET', 'HEAD'].includes(method) && (event.headers?.['x-csrf-token'] !== session.csrf || cookieValue(event, 'adventure_csrf') !== session.csrf)) return adventureJson(403, { error: 'No se pudo validar la solicitud. Recargá la página.' });
+  const account = ADVENTURE_USERS[session.sub]; if (!account) return adventureJson(403, { error: 'Esta cuenta no tiene acceso.' });
+  if (path === '/me' && method === 'GET') return adventureJson(200, { user: { id: session.sub, name: account.name }, ...safeAdventureRecord(await adventureRecord(session.sub)) });
+  if (path === '/profile' && method === 'PUT') { const profile = parseBody(event.body); if (!isValidAdventureProfile(profile)) return adventureJson(400, { error: 'Las respuestas no son válidas.' }); const saved = await saveAdventureRecord(session.sub, { profile: { answers: profile.answers, dreams: profile.dreams.map((item) => item.trim()), completed: profile.completed === true } }); return adventureJson(200, safeAdventureRecord(saved)); }
+  if (path === '/favorites' && method === 'PUT') { const favorite = parseBody(event.body); if (!isValidAdventureFavorite(favorite)) return adventureJson(400, { error: 'Favorito inválido.' }); const current = await adventureRecord(session.sub); const favorites = { ...(current?.favorites || {}), [favorite.destinationId]: favorite.status }; const saved = await saveAdventureRecord(session.sub, { favorites }); return adventureJson(200, safeAdventureRecord(saved)); }
+  if (path === '/shared' && method === 'GET') { const other = Object.keys(ADVENTURE_USERS).find((id) => id !== session.sub); const own = await adventureRecord(session.sub); const otherRecord = other ? await adventureRecord(other) : null; const privateAllowed = own?.profile?.completed && otherRecord?.profile?.completed; return adventureJson(200, { own: safeAdventureRecord(own), other: privateAllowed ? { user: { id: other, name: ADVENTURE_USERS[other].name }, ...safeAdventureRecord(otherRecord) } : null, sharingReady: Boolean(privateAllowed) }); }
+  return adventureJson(404, { error: 'No encontrado.' });
+}
+function adventureShell(event) {
+  const hasSession = Boolean(adventureSession(event));
+  return { statusCode: 200, headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store', vary: 'Cookie', 'x-robots-tag': 'noindex, nofollow' }, body: `<!doctype html><html lang="es-UY"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Nuestra próxima aventura</title><link rel="stylesheet" href="/adventure/style.css"></head><body class="adventure-body"><main id="adventure-app" class="adventure-app">${hasSession ? 'Cargando nuestro cuaderno…' : 'Preparando el acceso privado…'}</main><script type="module" src="/adventure/app.js"></script></body></html>` };
+}
 function available(puzzle, developerMode = false) { return developerMode || now() >= puzzle.unlockAt; }
 async function progress(userId, puzzleId) { return (await db.send(new GetCommand({ TableName: TABLE, Key: { userId, puzzleId } }))).Item; }
 const resetRecordId = (puzzleId) => `RESET#${puzzleId}`;
@@ -101,6 +152,8 @@ async function rewardSlots(userId, developerPreview = false) { const completions
 async function metaReward(userId) { const completions = await completionStatus(userId); const pieces = puzzles.filter((puzzle) => completions[puzzle.id]?.completedAt).length; const enabled = rewardConfig.pieces?.enabled === true; if (!enabled) return { enabled: false, pieces: 0, totalPieces: puzzles.length, unlocked: false }; if (pieces !== puzzles.length) return { enabled: true, pieces, totalPieces: puzzles.length, unlocked: false }; const final = rewardConfig.pieces.finalReward; return { enabled: true, pieces, totalPieces: puzzles.length, unlocked: true, reward: { id: final.id, type: final.type, title: final.title, message: final.message, blocks: await Promise.all(final.blocks.map(publicBlock)) } };
 }
 export async function handler(event) {
+  if (event.rawPath?.startsWith('/nuestra-aventura')) return adventureShell(event);
+  if (event.rawPath?.startsWith('/api/adventure')) return handleAdventure(event);
   const scheduledNotification = event.detail?.type === 'sudoku-unlock-notification' ? event.detail : event.type === 'sudoku-unlock-notification' ? event : null;
   if (scheduledNotification) { const puzzle = puzzles.find((item) => item.id === scheduledNotification.puzzleId); if (!puzzle) throw new Error('Sudoku inexistente para notificación.'); await sendUnlockEmail(puzzle); return { ok: true }; }
   if (event.requestContext?.http?.method === 'OPTIONS') return json(204, {});

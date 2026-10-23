@@ -69,7 +69,7 @@ resource "aws_lambda_function" "sudoku" {
   memory_size      = 256
   filename         = data.archive_file.sudoku_lambda.output_path
   source_code_hash = data.archive_file.sudoku_lambda.output_base64sha256
-  environment { variables = { PROGRESS_TABLE = aws_dynamodb_table.sudoku_progress.name, REWARDS_BUCKET = aws_s3_bucket.sudoku_rewards.bucket, ACCESS_CODE = var.sudoku_access_code, DEVELOPER_ACCESS_CODE = coalesce(var.sudoku_developer_access_code, ""), ADMIN_ACCESS_CODE = var.sudoku_admin_access_code, NOTIFICATION_EMAIL = var.sudoku_notification_email, NOTIFICATION_EMAILS = join(",", distinct(concat([var.sudoku_notification_email], var.sudoku_notification_additional_emails))), RESEND_API_KEY = var.resend_api_key, RESEND_FROM_EMAIL = var.resend_from_email, SESSION_SECRET = var.sudoku_session_secret, UNLOCK_TIMEZONE = var.sudoku_timezone, ALLOWED_ORIGIN = var.domain_name == null ? "*" : "https://${var.domain_name}" } }
+  environment { variables = { PROGRESS_TABLE = aws_dynamodb_table.sudoku_progress.name, REWARDS_BUCKET = aws_s3_bucket.sudoku_rewards.bucket, ACCESS_CODE = var.sudoku_access_code, DEVELOPER_ACCESS_CODE = coalesce(var.sudoku_developer_access_code, ""), ADMIN_ACCESS_CODE = var.sudoku_admin_access_code, NOTIFICATION_EMAIL = var.sudoku_notification_email, NOTIFICATION_EMAILS = join(",", distinct(concat([var.sudoku_notification_email], var.sudoku_notification_additional_emails))), RESEND_API_KEY = var.resend_api_key, RESEND_FROM_EMAIL = var.resend_from_email, SESSION_SECRET = var.sudoku_session_secret, UNLOCK_TIMEZONE = var.sudoku_timezone, ALLOWED_ORIGIN = var.domain_name == null ? "*" : "https://${var.domain_name}", ADVENTURE_USERS_JSON = var.adventure_users_json, ADVENTURE_SESSION_SECRET = coalesce(var.adventure_session_secret, var.sudoku_session_secret) } }
 }
 resource "aws_apigatewayv2_api" "sudoku" {
   name          = "${var.project_name}-sudoku"
@@ -89,6 +89,16 @@ resource "aws_apigatewayv2_route" "sudoku" {
 resource "aws_apigatewayv2_route" "sudoku_root" {
   api_id    = aws_apigatewayv2_api.sudoku.id
   route_key = "ANY /api/sudoku"
+  target    = "integrations/${aws_apigatewayv2_integration.sudoku.id}"
+}
+resource "aws_apigatewayv2_route" "adventure_page" {
+  api_id    = aws_apigatewayv2_api.sudoku.id
+  route_key = "ANY /nuestra-aventura/{proxy+}"
+  target    = "integrations/${aws_apigatewayv2_integration.sudoku.id}"
+}
+resource "aws_apigatewayv2_route" "adventure_page_root" {
+  api_id    = aws_apigatewayv2_api.sudoku.id
+  route_key = "ANY /nuestra-aventura"
   target    = "integrations/${aws_apigatewayv2_integration.sudoku.id}"
 }
 resource "aws_apigatewayv2_stage" "sudoku" {
